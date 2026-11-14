@@ -1,33 +1,3 @@
-# PulseDesk XR — Build Blueprint
-
-Rewritten 14 Nov 2026 for a two-person team with **no fixed hardware requirement**. The earlier version assumed a BosGame M5 plus an RTX 4080 running a local AI pipeline; that is gone. Anything that needs a particular PC is now optional and dev-only (Appendix A).
-
-How to read this: sections 1–4 are decisions, 5–12 are build steps in order, 13 is the link index. Task IDs such as `A3` refer to [PLAN.md](PLAN.md).
-
-**A note on the code.** The scripts here were written against Meta's current documentation but have not been compiled against your installed SDK. Where a call could not be confirmed it is marked *check*. Have your agent confirm with `vr_docs_search` before relying on it.
-
----
-
-## 0. What changed from the original brief
-
-| Original | Now | Why |
-| --- | --- | --- |
-| Two-machine split (BosGame M5 LLM server + RTX 4080 voice server) | Removed. Ships with an offline rule-based splitter; voice and LLM are optional layers that run on the headset or in the cloud | Teammate has neither machine. More importantly, **judges' headsets cannot reach a PC on our LAN**, so that pipeline would never have run for them |
-| "100% on-premise AI voice pipeline" | Presets + offline splitter always work; dictation is a bonus | Same reason; also the "take it away" guideline |
-| Eyes + pinch as the primary input | Hand ray + pinch, grab, poke and microgestures are primary; gaze is an enhancement | Judges use **Quest 3 / 3S, which have no eye tracking**. Meta's Gaze Interaction block is also labelled *Experimental* |
-| Enable Eye-Tracked Foveated Rendering | Fixed foveated rendering + dynamic resolution | No eye tracking on the judging hardware |
-| Up to three Urgent cards in a row | Urgent holds **one** card (the active sprint) | Three 14 cm cards do not fit a lane spaced 18 cm from its neighbours |
-| `Vector3 p = anchor.GetClosestSurfacePosition(pos)` | Downward physics ray against the room mesh | That method returns a `float` distance with an `out` position; the original line does not compile |
-| Placement ray pitched with `Quaternion.Euler(25,0,0) * dir` | Pitched about the user's own right axis | The Euler version tilts around the world X axis, so it only works when facing world +Z |
-| Wait for MRUK's scene-loaded callback, else nothing | Timeout, then depth, then fixed position | With no room scan the callback may never arrive |
-| Resume timer on every `InputFocusAcquired` | Separate user-pause and system-pause flags | The original un-paused a sprint the user had paused on purpose |
-| "Gaze supplies the target" for microgestures | A focused card that swipes cycle through; hover sets focus when available | Needed for Quest 3/3S |
-| 32 skills incl. `hz-unity-device-readiness`, `hz-store-publish` | 29 skills are listed in the repo today; those two names are **not** among them. Use `hz-store-submit`, `hz-immersive-designer`, `hz-unity-code-review` | Checked against the repo README |
-| "Judging 23 Nov – 9 Dec"; "AI video explicitly forbidden"; "five special awards" | Judging from ~18 Nov to ~9 Dec; guidance is *don't lean on* AI-generated video; six special awards | Checked against the rules page |
-| Healthcare / circuit-sim rationale (DCB0129 etc.) | Dropped | Not relevant to building this |
-| Red / Yellow / Green lane names | Urgent / Next / Done, each with colour **and** icon **and** label | Colour alone fails colour-blind users |
-
----
 
 ## 1. Competition facts (checked 14 Nov against the Devpost pages)
 

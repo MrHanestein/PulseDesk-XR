@@ -2,8 +2,8 @@
 
 Two people, about four days. All times are **GMT (UK)**. The deadline is **Wed 18 Nov, 20:00 GMT** (12:00 PT). We stop touching the build at **16:00 GMT**.
 
-- **A** = has the desktop and the Quest. Owns everything that needs a headset.
-- **B** = teammate. Owns everything that can be built and tested in the Unity Editor or XR Simulator.
+- **A is David** = has the desktop and the Quest. Owns everything that needs a headset.
+- **B is teammate** = teammate. Owns everything that can be built and tested in the Unity Editor or XR Simulator.
 
 If B also has a Quest 3/3S, B takes over "untested room" checks (§5) — a second room and a second pair of hands is the best test we have.
 

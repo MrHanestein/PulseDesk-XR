@@ -54,17 +54,28 @@ namespace PulseDesk
             return false;
         }
 
-        private async void LoadRoom()
+        private System.Threading.Tasks.Task _load;
+
+        private void LoadRoom()
         {
             try
             {
                 // false: use a scan if there is one, never start room capture.
-                await MRUK.Instance.LoadSceneFromDevice(requestSceneCaptureIfNoDataFound: false);
+                _load = MRUK.Instance.LoadSceneFromDevice(false);
             }
             catch (Exception e)
             {
                 Debug.LogWarning("PulseDesk: room scan could not be loaded. " + e.Message);
+                _loadFinished = true;
             }
+        }
+
+        // The load is polled, not awaited, so this file needs no async state machine.
+        private void Update()
+        {
+            if (_load == null || !_load.IsCompleted) return;
+            if (_load.IsFaulted) Debug.LogWarning("PulseDesk: room scan could not be loaded.");
+            _load = null;
             _loadFinished = true;
         }
 

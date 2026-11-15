@@ -35,6 +35,8 @@ Not checked yet, because it needs the headset
 Put the controllers in another room first.
 
 - [ ] The real room is visible, not black
+- [ ] The dock's back panels are dark glass and the desk shows faintly through them. Text on them is sharp and never hidden
+- [ ] With the app running, open the system menu and try to open a browser window. Note whether it can stay open beside the dock
 - [ ] The dock appears within reach, facing me, and the text is readable
 - [ ] Pinch a card, carry it to Done, let go. A chime plays
 - [ ] From further back, point at a card, pinch and drag it to Urgent. The timer starts

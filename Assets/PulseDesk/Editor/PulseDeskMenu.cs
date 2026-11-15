@@ -47,7 +47,24 @@ namespace PulseDesk.EditorTools
             }
         }
 
-        private static void CreateMaterial()
+        private const string GlassPath = "Assets/PulseDesk/Resources/PulseDeskGlass.mat";
+
+        /// <summary>Material assets must exist on disk so their shader variants are included in the build.</summary>
+        public static void CreateMaterial()
+        {
+            CreateSolidMaterial();
+            Material solid = AssetDatabase.LoadAssetAtPath<Material>(MaterialPath);
+            if (solid != null && AssetDatabase.LoadAssetAtPath<Material>(GlassPath) == null)
+            {
+                Material glass = new Material(solid);
+                Make.ConfigureGlass(glass);
+                AssetDatabase.CreateAsset(glass, GlassPath);
+                AssetDatabase.SaveAssets();
+                Debug.Log("PulseDesk: created " + GlassPath);
+            }
+        }
+
+        private static void CreateSolidMaterial()
         {
             if (AssetDatabase.LoadAssetAtPath<Material>(MaterialPath) != null) return;
 
@@ -184,7 +201,7 @@ namespace PulseDesk.EditorTools
                 }
                 scenes.Add(active);
             }
-            if (AssetDatabase.LoadAssetAtPath<Material>(MaterialPath) == null) CreateMaterial();
+            CreateMaterial();
 
             ApplyAndroidSettings();
             PulseDeskAutomation.ApplySigning();

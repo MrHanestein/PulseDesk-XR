@@ -5,12 +5,13 @@ namespace PulseDesk
     /// <summary>Colours and labels. Each lane has a colour AND an icon AND a text label.</summary>
     public static class Theme
     {
-        public static readonly Color Plate = Hex(0x17191C);
-        public static readonly Color Panel = Hex(0x1F2226);
-        public static readonly Color CardBody = Hex(0x2A2D32);
-        public static readonly Color CardHover = Hex(0x3C4047);
-        public static readonly Color Button = Hex(0x30343A);
-        public static readonly Color ButtonHover = Hex(0x474C54);
+        // The plate and the back panels are smoked glass: the real desk shows through them.
+        public static readonly Color Plate = Glass(0x0B0F16, 0.42f);
+        public static readonly Color Panel = Glass(0x10151E, 0.62f);
+        public static readonly Color CardBody = Hex(0x252B36);
+        public static readonly Color CardHover = Hex(0x39424F);
+        public static readonly Color Button = Hex(0x2E3644);
+        public static readonly Color ButtonHover = Hex(0x47536A);
         public static readonly Color TextMain = Hex(0xE8EAED);
         public static readonly Color TextDim = Hex(0x9AA0A6);
         public static readonly Color Urgent = Hex(0xF2383F);
@@ -35,6 +36,13 @@ namespace PulseDesk
                 case TaskLane.Done: return "DONE";
                 default: return "NEXT";
             }
+        }
+
+        public static Color Glass(int rgb, float alpha)
+        {
+            Color c = Hex(rgb);
+            c.a = alpha;
+            return c;
         }
 
         public static Color Hex(int rgb)

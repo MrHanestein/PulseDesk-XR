@@ -52,8 +52,11 @@ namespace PulseDesk
         private string _shownIdle = "";
         private string _shownClear = "";
         private float _nextSlowCheck;
+        private TextMeshPro _glance;
+        private string _shownGlance = "";
         private Transform _bar;
         private const float BarWidth = 0.150f;
+        private readonly System.Collections.Generic.List<TaskItem> _glanceScratch = new System.Collections.Generic.List<TaskItem>();
 
         public static DockView Build(Transform root, TaskStore store, DockActions actions)
         {
@@ -138,6 +141,11 @@ namespace PulseDesk
                         new Vector2(0.062f, 0.045f), "", 10f, OnTimer);
                     _rightButton = DockButton.Create("Right", go.transform, at + new Vector3(0.056f, 0f, 0f),
                         new Vector2(0.044f, 0.045f), "+", 9f, OnRight);
+
+                    // Compact mode only: one line under the sprint that answers "what else is there" at a glance.
+                    _glance = Make.Text("Glance", go.transform, new Vector3(0f, -0.062f, 0.0f), new Vector2(0.34f, 0.022f),
+                        8.5f, Theme.TextMain, TextAlignmentOptions.Center);
+                    _glance.gameObject.SetActive(false);
                 }
             }
 
@@ -234,6 +242,8 @@ namespace PulseDesk
                 Lanes[i].gameObject.SetActive(!hide);
             }
             _modeButton.SetLabel(compact ? "Expand" : "Compact");
+            _glance.gameObject.SetActive(compact);
+            _shownGlance = "";
             if (!compact) ClosePicker();
             if (CompactChanged != null) CompactChanged();
             ShowBanner(compact ? "Compact. Only your sprint stays in view" : "Full board", false);
@@ -312,6 +322,25 @@ namespace PulseDesk
 
             if (Time.unscaledTime < _nextSlowCheck) return;
             _nextSlowCheck = Time.unscaledTime + 0.25f;
+
+            if (Compact)
+            {
+                _store.GetLane(TaskLane.Next, _glanceScratch);
+                int waiting = _glanceScratch.Count;
+                string glance;
+                if (waiting == 0) glance = "Nothing waiting  |  " + _store.DoneToday + " done today";
+                else
+                {
+                    TaskItem next = _glanceScratch[0];
+                    string when = next.dueTicks > 0 ? QuickAdd.FormatDue(new DateTime(next.dueTicks), _store.Clock()) + " " : "";
+                    glance = "Then: " + when + next.title + (waiting > 1 ? "  +" + (waiting - 1) + " more" : "") + "  |  " + _store.DoneToday + " done";
+                }
+                if (glance != _shownGlance)
+                {
+                    _shownGlance = glance;
+                    _glance.text = glance;
+                }
+            }
 
             // The Clear button says what it will do right now.
             string clear = _actions.clearLabel != null ? _actions.clearLabel() : "Clear";

@@ -303,6 +303,7 @@ namespace PulseDesk.EditorTools
             Run(() =>
             {
                 PulseDeskMenu.ResetSave();
+                PulseDeskMenu.CreateMaterial();
                 EditorSceneManager.OpenScene(DevScene, OpenSceneMode.Single);
                 SessionState.SetBool(SmokeKey, true);
                 SmokeHook();

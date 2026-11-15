@@ -329,7 +329,15 @@ namespace PulseDesk
 
         private void OnMoved(TaskItem item, TaskLane from)
         {
-            if (item.lane == TaskLane.Done) _sfx.Chime();
+            if (item.lane == TaskLane.Done)
+            {
+                _sfx.Chime();
+                if (_dock != null && !_dock.Compact)
+                {
+                    Transform slot = _dock.Lane(TaskLane.Done).slot;
+                    Burst.Play(slot.position, slot.rotation, Theme.Done, Theme.Next);
+                }
+            }
             else if (item.lane == TaskLane.Urgent) _sfx.SprintStart();
             else _sfx.Tick();
             CheckOnboarding();

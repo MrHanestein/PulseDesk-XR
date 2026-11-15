@@ -48,8 +48,9 @@ namespace PulseDesk
             float z = -(Thickness * 0.5f + 0.0006f);
             v._contents = Make.Empty("Contents", go.transform, Vector3.zero, Quaternion.identity).transform;
             v._body = Make.Box("Body", v._contents, Vector3.zero, new Vector3(Width, Height, Thickness), Theme.CardBody);
-            v._strip = Make.Box("Strip", v._contents, new Vector3(-Width * 0.5f + 0.004f, 0f, -0.0004f),
-                new Vector3(0.008f, Height, Thickness), Theme.Next);
+            // A slim accent bar set inside the rounded edge.
+            v._strip = Make.Box("Strip", v._contents, new Vector3(-Width * 0.5f + 0.0065f, 0f, -(Thickness * 0.5f + 0.0004f)),
+                new Vector3(0.004f, Height - 0.022f, 0.0008f), Theme.Next);
 
             v._title = Make.Text("Title", v._contents, new Vector3(0.006f, 0.021f, z), new Vector2(0.118f, 0.032f),
                 8.5f, Theme.TextMain, TextAlignmentOptions.TopLeft);

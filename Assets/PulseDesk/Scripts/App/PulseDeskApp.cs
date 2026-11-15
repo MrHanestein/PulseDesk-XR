@@ -101,12 +101,13 @@ namespace PulseDesk
                 DockActions actions = new DockActions();
                 actions.newTask = NewTask;
                 actions.routine = SubmitGoal;
-                actions.removeFocused = RemoveFocused;
-                actions.clearDone = ClearDone;
+                actions.clearOrUndo = ClearOrUndo;
+                actions.clearLabel = ClearLabel;
                 actions.recenter = Recenter;
                 _dock = DockView.Build(dockRoot, Store, actions);
                 _cards = gameObject.AddComponent<CardManager>();
                 _cards.Init(Store, _dock);
+                _dock.CompactChanged += _cards.Relayout;
                 if (Store.OnboardingDone) _dock.ShowBanner(WelcomeBack(), false);
                 else _dock.ShowBanner("No controllers needed. Pinch a card to pick it up", false);
             }
@@ -137,33 +138,68 @@ namespace PulseDesk
             int open = Store.Tasks.Count - Store.CountIn(TaskLane.Done);
             TaskItem due = Store.NextDue();
             if (due != null && Store.IsOverdue(due)) return "Welcome back. Overdue: " + due.title;
-            if (open == 0) return "Welcome back. Nothing waiting";
-            return "Welcome back. " + open + (open == 1 ? " task" : " tasks") + " waiting";
+            string streak = Store.DayStreak > 1 ? "Day " + Store.DayStreak + " in a row. " : "Welcome back. ";
+            if (open == 0) return streak + "Nothing waiting";
+            return streak + open + (open == 1 ? " task" : " tasks") + " waiting";
         }
 
-        /// <summary>"Remove card": deletes the highlighted card. Dropping a card on the button does the same.</summary>
+        private const float UndoWindow = 12f;
+        private float _undoUntil;
+
+        private bool UndoArmed { get { return Store.CanUndo && Time.unscaledTime < _undoUntil; } }
+
+        /// <summary>Deletes the highlighted card. Dropping a card on the Clear button does the same.</summary>
         public void RemoveFocused()
         {
             TaskItem t = Store.Focused;
-            if (t == null)
-            {
-                if (_dock != null) _dock.ShowBanner("Point at a card first, then pinch Remove card", false);
-                return;
-            }
-            Store.Remove(t.id);
+            if (t != null) Store.Remove(t.id);
         }
 
-        /// <summary>"Clear done": empties the Done lane. The day's count and the streak stay.</summary>
-        public void ClearDone()
+        /// <summary>What the Clear button will do if pressed now.</summary>
+        public string ClearLabel()
         {
-            int n = Store.ClearDone();
-            if (_dock != null) _dock.ShowBanner(n == 0 ? "Nothing in DONE to clear" : "Cleared " + n + " finished", false);
+            if (UndoArmed) return "Undo";
+            if (Store.CountIn(TaskLane.Done) > 0) return "Clear done";
+            return Store.Tasks.Count > 0 ? "Clear all" : "Clear";
+        }
+
+        /// <summary>
+        /// One button for tidying up: clears Done, or the whole board when Done is already empty,
+        /// and for a few seconds afterwards it is the Undo that puts everything back.
+        /// </summary>
+        public void ClearOrUndo()
+        {
+            if (UndoArmed)
+            {
+                _undoUntil = 0f;
+                if (Store.Undo())
+                {
+                    _sfx.Undo();
+                    if (_dock != null) _dock.ShowBanner("Restored", false);
+                }
+                return;
+            }
+
+            Store.ForgetUndo();
+            int n = Store.CountIn(TaskLane.Done) > 0 ? Store.ClearDone() : Store.ClearAll();
+            if (n == 0)
+            {
+                if (_dock != null) _dock.ShowBanner("Nothing to clear", false);
+                return;
+            }
+            _sfx.Remove();
+            _undoUntil = Time.unscaledTime + UndoWindow;
+            if (_dock != null) _dock.ShowBanner("Cleared " + n + ". Pinch Undo to bring them back", false);
+            CheckOnboarding();
         }
 
         private void OnRemoved(TaskItem item)
         {
+            // A single card was deleted (dropped on Clear). Clearing Done comes through here too and sets its own banner.
+            _undoUntil = Time.unscaledTime + UndoWindow;
+            if (item.lane == TaskLane.Done) return;
             _sfx.Remove();
-            if (_dock != null && item.lane != TaskLane.Done) _dock.ShowBanner("Removed: " + item.title, false);
+            if (_dock != null) _dock.ShowBanner("Removed: " + item.title + ". Pinch Undo to restore", false);
             CheckOnboarding();
         }
 
@@ -253,15 +289,25 @@ namespace PulseDesk
 
         private IEnumerator AddSteps(string goal, List<string> steps)
         {
+            TaskItem first = null;
             for (int i = 0; i < steps.Count; i++)
             {
+                // A step can carry its own sprint length, as in "10m: Review notes".
+                QuickTask q = QuickAdd.Parse(steps[i], Store.Clock());
                 SetSpawnPoint(true);
-                Store.Add(steps[i], goal);
+                TaskItem item = Store.Add(q.title, goal, q.minutes);
+                if (q.hasDue) Store.SetDue(item.id, q.due);
+                if (first == null) first = item;
                 _sfx.Tick();
                 yield return new WaitForSeconds(0.15f);
             }
             SetSpawnPoint(false);
-            if (_dock != null) _dock.ShowBanner("Added " + steps.Count + " steps to NEXT: " + goal, false);
+
+            // Nothing running: the first step starts straight away, so a routine is one tap from pick to work.
+            bool started = first != null && Store.ActiveSprint() == null;
+            if (started) Store.Move(first.id, TaskLane.Urgent);
+            if (_dock != null)
+                _dock.ShowBanner(started ? goal + ": started \"" + first.title + "\"" : "Added " + steps.Count + " steps to NEXT: " + goal, false);
             CheckOnboarding();
         }
 

@@ -51,18 +51,19 @@ namespace PulseDesk
     {
         public static readonly string[] Titles =
         {
+            "Deep work 25m",
+            "Rapid triage",
             "Plan my day",
-            "Inbox routine",
-            "Presentation prep",
-            "Desk reset"
+            "Meeting prep"
         };
 
+        // Every step carries its own sprint length ("10m: ..."), read by QuickAdd.
         private static readonly string[][] Steps =
         {
-            new[] { "List everything on your mind", "Pick the three that matter today", "Put the first one in Urgent" },
-            new[] { "Archive what needs no reply", "Answer anything under two minutes", "Turn the rest into task cards" },
-            new[] { "Write the one point to remember", "Outline three sections", "Draft the first slide" },
-            new[] { "Clear everything off the desk", "Put back only what you use daily", "Bin or file the rest" }
+            new[] { "2m: Clear the desk, silence notifications", "20m: Heads down on the one deliverable", "3m: Save work and note the next step" },
+            new[] { "2m: Reply to anything under two minutes", "5m: Turn action emails into cards", "2m: Archive what is resolved" },
+            new[] { "5m: List everything on your mind", "3m: Pick the three that matter today", "2m: Put a time on each one" },
+            new[] { "5m: Read the agenda and last notes", "5m: Write your three points", "2m: Check audio and camera" }
         };
 
         public static bool TryGet(string goal, out string[] steps)

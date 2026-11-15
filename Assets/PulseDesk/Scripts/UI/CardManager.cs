@@ -25,11 +25,8 @@ namespace PulseDesk
             _store.FocusChanged += OnFocus;
             _store.TaskRemoved += OnRemoved;
             _store.TaskChanged += OnChanged;
-
-            for (int i = 0; i < _store.Tasks.Count; i++) CreateCard(_store.Tasks[i]);
-            Relayout();
-            foreach (TaskCardView c in _cards.Values) c.SnapToSlot();
-            OnFocus(_store.Focused);
+            _store.BoardReset += Rebuild;
+            Rebuild();
         }
 
         private void OnDestroy()
@@ -40,23 +37,20 @@ namespace PulseDesk
             _store.FocusChanged -= OnFocus;
             _store.TaskRemoved -= OnRemoved;
             _store.TaskChanged -= OnChanged;
+            _store.BoardReset -= Rebuild;
         }
 
-        private void OnRemoved(TaskItem item)
+        /// <summary>Throws every card away and makes them again from the store (start, clear all, undo).</summary>
+        private void Rebuild()
         {
-            TaskCardView v;
-            if (_cards.TryGetValue(item.id, out v))
-            {
-                _cards.Remove(item.id);
-                if (v != null) Destroy(v.gameObject);
-            }
+            foreach (TaskCardView c in _cards.Values)
+                if (c != null) Destroy(c.gameObject);
+            _cards.Clear();
+
+            for (int i = 0; i < _store.Tasks.Count; i++) CreateCard(_store.Tasks[i]);
             Relayout();
-        }
-
-        private void OnChanged(TaskItem item)
-        {
-            TaskCardView v;
-            if (_cards.TryGetValue(item.id, out v)) v.Refresh();
+            foreach (TaskCardView c in _cards.Values) c.SnapToSlot();
+            OnFocus(_store.Focused);
         }
 
         private TaskCardView CreateCard(TaskItem item)
@@ -82,6 +76,24 @@ namespace PulseDesk
             Relayout();
         }
 
+        private void OnRemoved(TaskItem item)
+        {
+            TaskCardView v;
+            if (_cards.TryGetValue(item.id, out v))
+            {
+                _cards.Remove(item.id);
+                if (v != null) Destroy(v.gameObject);
+            }
+            Relayout();
+        }
+
+        private void OnChanged(TaskItem item)
+        {
+            TaskCardView v;
+            if (_cards.TryGetValue(item.id, out v)) v.Refresh();
+            Relayout();   // a new due time can change the order in Next
+        }
+
         private void OnFocus(TaskItem focused)
         {
             foreach (KeyValuePair<string, TaskCardView> pair in _cards)
@@ -92,9 +104,9 @@ namespace PulseDesk
         /// <summary>Called by a card when the hand lets go of it.</summary>
         public void HandleDrop(TaskCardView card)
         {
-            // Dropping a card on "Remove card" deletes it.
-            if (_dock.RemoveButton != null
-                && Vector3.Distance(card.transform.position, _dock.RemoveButton.transform.position) < 0.07f)
+            // Dropping a card on the Clear button deletes it.
+            if (_dock.ClearButton != null && _dock.ClearButton.gameObject.activeInHierarchy
+                && Vector3.Distance(card.transform.position, _dock.ClearButton.transform.position) < 0.07f)
             {
                 _store.Remove(card.TaskId);
                 return;
@@ -105,6 +117,7 @@ namespace PulseDesk
             for (int i = 0; i < _dock.Lanes.Length; i++)
             {
                 DockLane lane = _dock.Lanes[i];
+                if (lane.hidden) continue;
                 // Compare against the middle of the lane's stack area, not just the front slot.
                 Vector3 centre = lane.slot.TransformPoint(new Vector3(0f, 0.04f, 0f));
                 float d = Vector3.Distance(card.transform.position, centre);
@@ -120,9 +133,7 @@ namespace PulseDesk
             for (int l = 0; l < _dock.Lanes.Length; l++)
             {
                 DockLane lane = _dock.Lanes[l];
-                _scratch.Clear();
-                for (int i = 0; i < _store.Tasks.Count; i++)
-                    if (_store.Tasks[i].lane == lane.lane) _scratch.Add(_store.Tasks[i]);
+                _store.GetLane(lane.lane, _scratch);   // Next comes back with the earliest due time first
 
                 int count = _scratch.Count;
                 int visible = Mathf.Min(count, DockLane.MaxVisible);
@@ -141,7 +152,7 @@ namespace PulseDesk
                 {
                     TaskCardView v;
                     if (!_cards.TryGetValue(_scratch[i].id, out v)) continue;
-                    bool show = i >= start && i < start + visible;
+                    bool show = !lane.hidden && i >= start && i < start + visible;
                     if (!show && !v.Held)
                     {
                         if (v.gameObject.activeSelf) v.gameObject.SetActive(false);

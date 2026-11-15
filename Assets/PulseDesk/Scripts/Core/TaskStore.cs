@@ -62,15 +62,148 @@ namespace PulseDesk
 
         private float _nextDueCheck;
         private float _overtime;
+        private float _autoNextIn = -1f;
+        private string _undoJson;
+        private readonly List<TaskItem> _lineScratch = new List<TaskItem>();
+
+        /// <summary>Raised when the whole board was replaced (clear all, undo). Views rebuild their cards.</summary>
+        public event Action BoardReset;
+
+        public int FocusMinutesToday { get { return Mathf.FloorToInt(_save.focusSecondsToday / 60f); } }
+        public bool CanUndo { get { return !string.IsNullOrEmpty(_undoJson); } }
 
         private void Update()
         {
             Tick(Time.deltaTime);
+            AutoFlowTick(Time.unscaledDeltaTime);
             if (Time.unscaledTime >= _nextDueCheck)
             {
                 _nextDueCheck = Time.unscaledTime + 1f;
                 CheckDue();
             }
+        }
+
+        // ---------- flow: the board moves itself forward ----------
+
+        /// <summary>
+        /// A few seconds after a sprint is finished, the next card in line starts by itself.
+        /// Public so tests can drive time.
+        /// </summary>
+        public void AutoFlowTick(float dt)
+        {
+            if (_autoNextIn < 0f) return;
+            _autoNextIn -= dt;
+            if (_autoNextIn > 0f) return;
+            _autoNextIn = -1f;
+            if (ActiveSprint() == null) StartNext(false);
+        }
+
+        /// <summary>Tasks in a lane in the order they are shown. Next puts the earliest due time first.</summary>
+        public void GetLane(TaskLane lane, List<TaskItem> into)
+        {
+            into.Clear();
+            for (int i = 0; i < _save.tasks.Count; i++)
+                if (_save.tasks[i].lane == lane) into.Add(_save.tasks[i]);
+            if (lane != TaskLane.Next || into.Count < 2) return;
+
+            // Insertion sort keeps equal items in the order they were added.
+            for (int i = 1; i < into.Count; i++)
+            {
+                TaskItem x = into[i];
+                long key = x.dueTicks > 0 ? x.dueTicks : long.MaxValue;
+                int j = i - 1;
+                while (j >= 0 && (into[j].dueTicks > 0 ? into[j].dueTicks : long.MaxValue) > key)
+                {
+                    into[j + 1] = into[j];
+                    j--;
+                }
+                into[j + 1] = x;
+            }
+        }
+
+        /// <summary>Starts the first card in Next as the sprint. One tap, no dragging.</summary>
+        public bool StartNext(bool sayIfEmpty = true)
+        {
+            GetLane(TaskLane.Next, _lineScratch);
+            if (_lineScratch.Count == 0)
+            {
+                if (sayIfEmpty) RaiseAlert("Nothing waiting. Pinch New task to add one", false);
+                return false;
+            }
+            Move(_lineScratch[0].id, TaskLane.Urgent);
+            return true;
+        }
+
+        /// <summary>One-tap finish for the running sprint.</summary>
+        public void CompleteSprint()
+        {
+            TaskItem t = ActiveSprint();
+            if (t != null) Move(t.id, TaskLane.Done);
+        }
+
+        /// <summary>Gives the running sprint more time without stepping through lengths.</summary>
+        public void AddSprintMinutes(int minutes)
+        {
+            TaskItem t = ActiveSprint();
+            if (t == null || minutes <= 0) return;
+            t.durationSeconds += minutes * 60f;
+            t.remainingSeconds += minutes * 60f;
+            float progress = 1f - t.remainingSeconds / Mathf.Max(1f, t.durationSeconds);
+            t.alert50 = progress >= 0.5f;
+            t.alert90 = progress >= 0.9f;
+            t.alertEnd = false;
+            _overtime = 0f;
+            RaiseAlert("+" + minutes + " min on: " + t.title, false);
+            if (TaskChanged != null) TaskChanged(t);
+            Save();
+        }
+
+        // ---------- undo ----------
+
+        private void Snapshot()
+        {
+            _undoJson = JsonUtility.ToJson(_save);
+        }
+
+        public void ForgetUndo()
+        {
+            _undoJson = null;
+        }
+
+        /// <summary>Puts the cards back as they were before the last remove or clear.</summary>
+        public bool Undo()
+        {
+            if (!CanUndo) return false;
+            PulseDeskSave restored = null;
+            try { restored = JsonUtility.FromJson<PulseDeskSave>(_undoJson); }
+            catch (Exception) { }
+            _undoJson = null;
+            if (restored == null || restored.tasks == null) return false;
+
+            _save.tasks = restored.tasks;   // cards only: today's count, focus time and streak stay as they are
+            _autoNextIn = -1f;
+            Focused = FirstOpen();
+            if (BoardReset != null) BoardReset();
+            if (FocusChanged != null) FocusChanged(Focused);
+            if (StatsChanged != null) StatsChanged();
+            Save();
+            return true;
+        }
+
+        /// <summary>Wipes every lane. Undo brings it back.</summary>
+        public int ClearAll()
+        {
+            int n = _save.tasks.Count;
+            if (n == 0) return 0;
+            Snapshot();
+            _save.tasks.Clear();
+            _autoNextIn = -1f;
+            Focused = null;
+            if (BoardReset != null) BoardReset();
+            if (FocusChanged != null) FocusChanged(null);
+            if (StatsChanged != null) StatsChanged();
+            Save();
+            return n;
         }
 
         /// <summary>Raises "in 5 minutes" and "due now" alerts. Public so tests can drive the clock.</summary>
@@ -87,7 +220,11 @@ namespace PulseDesk
                     t.dueAlerted = true;
                     t.dueSoonAlerted = true;
                     SetFocus(t.id);
-                    RaiseAlert("Due now: " + t.title, true);
+                    // Nothing running, or the user paused: the due task takes over by itself.
+                    // A running sprint is never interrupted; the card waits at the front of Next.
+                    bool takeOver = t.lane == TaskLane.Next && (ActiveSprint() == null || _userPaused);
+                    if (takeOver) Move(t.id, TaskLane.Urgent);
+                    RaiseAlert((takeOver ? "Due now, started: " : "Due now: ") + t.title, true);
                     if (TaskChanged != null) TaskChanged(t);
                     Save();
                 }
@@ -133,11 +270,16 @@ namespace PulseDesk
                 if (_overtime >= 60f)
                 {
                     _overtime = 0f;
-                    RaiseAlert("Time is up: " + t.title + ". Drop it on DONE or pinch +", true);
+                    RaiseAlert("Time is up: " + t.title + ". Pinch Done or +5", true);
                 }
                 return;
             }
             _overtime = 0f;
+
+            // Time spent in a running sprint is the day's focus time.
+            int minutesBefore = FocusMinutesToday;
+            _save.focusSecondsToday += Mathf.Min(dt, t.remainingSeconds);
+            if (FocusMinutesToday != minutesBefore && StatsChanged != null) StatsChanged();
 
             t.remainingSeconds = Mathf.Max(0f, t.remainingSeconds - dt);
             float progress = 1f - t.remainingSeconds / Mathf.Max(1f, t.durationSeconds);
@@ -245,6 +387,7 @@ namespace PulseDesk
             {
                 RegisterCompletion();
                 if (Focused == t) CycleFocus(1);
+                if (from == TaskLane.Urgent) _autoNextIn = 3f;   // the next card starts by itself
             }
             else if (to == TaskLane.Urgent)
             {
@@ -270,6 +413,7 @@ namespace PulseDesk
         {
             TaskItem t = Get(id);
             if (t == null) return false;
+            Snapshot();
             bool wasFocused = Focused == t;
             _save.tasks.Remove(t);
             if (wasFocused)
@@ -286,6 +430,7 @@ namespace PulseDesk
         public int ClearDone()
         {
             List<TaskItem> done = _save.tasks.FindAll(x => x.lane == TaskLane.Done);
+            if (done.Count > 0) Snapshot();
             for (int i = 0; i < done.Count; i++)
             {
                 _save.tasks.Remove(done[i]);
@@ -469,6 +614,11 @@ namespace PulseDesk
                 _save.doneToday = 0;
                 if (_save.lastDoneDate != yesterday) _save.dayStreak = 0;
             }
+            if (_save.focusDate != today)
+            {
+                _save.focusDate = today;
+                _save.focusSecondsToday = 0f;
+            }
         }
 
         public void Save()
@@ -492,7 +642,7 @@ namespace PulseDesk
         private void SeedOnboarding()
         {
             _save.tasks.Add(new TaskItem { id = "onb1", title = "Pick me up", microStep = "Pinch this card and drop it on DONE", lane = TaskLane.Urgent, durationSeconds = 180f, remainingSeconds = 180f });
-            _save.tasks.Add(new TaskItem { id = "onb2", title = "Start a sprint", microStep = "Drag me to URGENT, or swipe your thumb left", lane = TaskLane.Next });
+            _save.tasks.Add(new TaskItem { id = "onb2", title = "I start by myself", microStep = "When a sprint is done the next card starts. Pinch Done to finish me", lane = TaskLane.Next });
             _save.tasks.Add(new TaskItem { id = "onb3", title = "Add your own", microStep = "Pinch \"New task\". Try: Call the bank at 3pm", lane = TaskLane.Next });
         }
     }

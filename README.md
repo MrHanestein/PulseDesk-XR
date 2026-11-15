@@ -14,15 +14,26 @@ This is my entry for the Meta VR Start Developer Competition 2026, Productivity 
 | --- | --- | --- | --- |
 | Move a card | Pinch it and carry it to a lane | Point, pinch and drag | Thumb swipe left for Urgent, right for Done |
 | Choose a different card | Touch it | Point at it | Thumb swipe forward or back |
+| Start the next card | Poke "Start" | Pinch it | |
+| Finish the sprint | Poke "Done" beside the timer | Pinch it | Thumb swipe right |
+| Give the sprint five more minutes | Poke "+5" | Pinch it | |
 | Pause or resume the sprint | Poke the timer | Pinch the timer | Thumb tap |
-| Make the sprint shorter or longer | Poke the minus or plus beside the timer | Pinch them | |
 | Add your own task | Poke "New task", then type or dictate | Pinch "New task" | |
-| Add a ready-made routine of three steps | Poke "Routines" and pick one | Pinch "Routines" | |
-| Delete a card | Drop it on "Remove card", or highlight it and poke the button | Pinch "Remove card" | |
-| Empty the Done lane | Poke "Clear done" | Pinch it | |
+| Add a routine of three timed steps | Poke "Routines" and pick one | Pinch "Routines" | |
+| Delete a card | Drop it on the "Clear" button | Drag it there from a distance | |
+| Clear the Done lane, or the whole board | Poke "Clear done" or "Clear all" | Pinch it | |
+| Take back a delete or a clear | Poke the same button while it says "Undo" | Pinch it | |
+| Shrink the dock to just the sprint | Poke "Compact" | Pinch it | |
 | Put the dock somewhere else | Poke "Move dock" | Pinch it | |
 
-Sprints can run 1, 5, 10, 15, 20, 25, 30, 45 or 60 minutes. With no sprint running, the minus and plus buttons set the length for every card that has not started yet.
+The board moves itself forward so there is little to manage.
+
+- When a sprint is finished the next card starts by itself three seconds later. The card with the earliest due time goes first.
+- When a task comes due and nothing is running, it starts by itself. A running sprint is never interrupted. The due card waits at the front of Next and the dock sounds an alert.
+- A routine starts its first step as soon as you pick it. Each step has its own length. "Deep work 25m" is 2 minutes to clear the desk, 20 minutes heads down and 3 minutes to save and note the next step.
+- Every card can carry its own sprint length. With nothing running, minus and plus beside "Start" set the length new cards get.
+- In the last minute the timer pulses, and when time is up a compact dock opens back to the full board.
+- The header shows open tasks, tasks done today and minutes spent in sprints today.
 
 No controller is needed at any point. Typing uses the headset's own keyboard, which works with hands and without internet.
 

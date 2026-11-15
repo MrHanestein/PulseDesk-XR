@@ -40,6 +40,8 @@ namespace PulseDesk
             if (_label != null) _label.text = text;
         }
 
+        public string LabelText { get { return _label != null ? _label.text : ""; } }
+
         public void SetLabelColor(Color color)
         {
             if (_label != null) _label.color = color;

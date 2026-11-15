@@ -362,21 +362,31 @@ namespace PulseDesk.EditorTools
                 Debug.Log("PulseDesk smoke: after actions cards=" + cards + " tasks=" + app.Store.Tasks.Count
                           + " done=" + done + " doneToday=" + app.Store.DoneToday + " errors=" + _smokeErrors);
                 if (cards != app.Store.Tasks.Count || done != 1 || app.Store.Tasks.Count != 8
-                    || app.Store.NextDue() == null) _smokeErrors++;
+                    || app.Store.NextDue() == null || app.Store.ActiveSprint() == null) _smokeErrors++;
                 Shot("shot-2-after");
+
+                // Remove a card, undo it, then clear Done and switch to compact mode.
                 app.RemoveFocused();
-                app.ClearDone();
-                app.Store.AdjustSprint(1);
+                bool removed = app.Store.Tasks.Count == 7 && app.ClearLabel() == "Undo";
+                app.ClearOrUndo();
+                bool restored = app.Store.Tasks.Count == 8;
+                app.Store.ForgetUndo();
+                bool label = app.ClearLabel() == "Clear done";
+                app.ClearOrUndo();
+                Debug.Log("PulseDesk smoke: removed=" + removed + " restored=" + restored + " label=" + label);
+                if (!removed || !restored || !label) _smokeErrors++;
+                UnityEngine.Object.FindAnyObjectByType<DockView>().SetCompact(true);
             }
             else if (_smokePhase == 2 && t > 10)
             {
                 _smokePhase = 3;
                 int cards = UnityEngine.Object.FindObjectsByType<TaskCardView>(FindObjectsInactive.Include).Length;
-                Debug.Log("PulseDesk smoke: after remove and clear cards=" + cards + " tasks=" + app.Store.Tasks.Count
-                          + " default=" + app.Store.DefaultMinutes + " errors=" + _smokeErrors);
-                if (cards != 6 || app.Store.Tasks.Count != 6 || app.Store.CountIn(TaskLane.Done) != 0
-                    || app.Store.DoneToday != 1 || app.Store.DefaultMinutes != 10f) _smokeErrors++;
-                Shot("shot-3-cleared");
+                int shown = UnityEngine.Object.FindObjectsByType<TaskCardView>(FindObjectsInactive.Exclude).Length;
+                Debug.Log("PulseDesk smoke: compact cards=" + cards + " shown=" + shown + " tasks=" + app.Store.Tasks.Count
+                          + " focusMin=" + app.Store.FocusMinutesToday + " errors=" + _smokeErrors);
+                if (cards != 7 || shown != 1 || app.Store.Tasks.Count != 7 || app.Store.CountIn(TaskLane.Done) != 0
+                    || app.Store.DoneToday != 1) _smokeErrors++;
+                Shot("shot-3-compact");
                 SessionState.SetBool(SmokeKey, false);
                 PulseDeskMenu.ResetSave();
                 Debug.Log("PulseDesk smoke: " + (_smokeErrors == 0 ? "PASS" : "FAIL"));

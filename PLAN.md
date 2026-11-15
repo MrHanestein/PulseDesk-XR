@@ -7,8 +7,8 @@ One person, one headset. The deadline is Wednesday 18 November 2026 at 20:00 GMT
 Done and checked on the PC
 
 - The code compiles with hands, thumb gestures, room scan placement and depth placement all switched on.
-- Twelve unit tests pass.
-- A scripted run in the editor shows the dock, three lanes and the starter cards. It moves a card to Done, adds a typed task and one with a due time, adds a routine, removes a card, clears Done, changes the sprint length and moves the dock, with no errors.
+- Sixteen unit tests pass.
+- A scripted run in the editor shows the dock, three lanes and the starter cards. It moves a card to Done, adds a typed task and one with a due time, adds a routine that starts its first step, removes a card and undoes it, clears Done, switches to compact mode and moves the dock, with no errors.
 - The APK builds, is signed with the release key and contains only arm64 code.
 
 Not checked yet, because it needs the headset
@@ -37,14 +37,20 @@ Put the controllers in another room first.
 - [ ] The dock appears within reach, facing me, and the text is readable
 - [ ] Pinch a card, carry it to Done, let go. A chime plays
 - [ ] From further back, point at a card, pinch and drag it to Urgent. The timer starts
-- [ ] Poke "Routines", poke one. Three cards arrive in Next
+- [ ] Poke "Routines", poke "Deep work 25m". Three cards arrive and the first one starts with a 2 minute timer
+- [ ] Poke "Done" beside the timer. A chime plays and three seconds later the next card starts by itself
+- [ ] Poke "+5". The timer gains five minutes
+- [ ] With nothing running, poke "Start". The front card in Next begins
+- [ ] Poke "Compact". Only the banner and the sprint remain. Poke "Expand" to bring the board back
+- [ ] In compact mode let a 1 minute sprint run out. The timer pulses in the last minute and the full board returns at zero
 - [ ] Poke "New task". The system keyboard opens. Type a task and confirm. A card arrives in Next
 - [ ] In the keyboard, use the microphone key to dictate "call the bank in 6 minutes". The card shows a due time
 - [ ] One minute later a soft tone plays and the banner says "In 5 minutes". At the due time a louder alert plays
-- [ ] Poke plus and minus beside the timer. The sprint length changes
+- [ ] With nothing running, poke minus and plus. The length on the "Start" button changes
 - [ ] Let a 1 minute sprint run out. The alert is easy to hear and the banner turns red
-- [ ] Drop a card on "Remove card". It is deleted
+- [ ] Drop a card on the "Clear" button. It is deleted and the button says "Undo". Poke it and the card comes back
 - [ ] Poke "Clear done". The Done lane empties and the day's count stays
+- [ ] With Done empty the button says "Clear all". Poke it, then poke "Undo". The whole board returns
 - [ ] Pinch the timer. It pauses. Pinch again and it runs
 - [ ] Open and close the system menu. The timer pauses and resumes, and a pause I chose stays paused
 - [ ] "Move dock here" puts the dock where I am now looking

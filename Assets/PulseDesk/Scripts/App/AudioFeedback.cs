@@ -12,6 +12,7 @@ namespace PulseDesk
         private AudioClip _nudge;
         private AudioClip _alert;
         private AudioClip _remove;
+        private AudioClip _undo;
 
         private void Awake()
         {
@@ -27,6 +28,7 @@ namespace PulseDesk
             // The alert has to be noticed with the eyes elsewhere: three rising pairs, about a second long.
             _alert = Tones("alert", new[] { 660f, 880f, 660f, 880f, 660f, 880f }, 0.17f, 0.9f);
             _remove = Tones("remove", new[] { 440f, 330f }, 0.10f, 0.5f);
+            _undo = Tones("undo", new[] { 330f, 440f, 554.4f }, 0.09f, 0.5f);
         }
 
         public void Tick() { Play(_tick); }
@@ -35,6 +37,7 @@ namespace PulseDesk
         public void Nudge() { Play(_nudge); }
         public void AlertTone() { Play(_alert); }
         public void Remove() { Play(_remove); }
+        public void Undo() { Play(_undo); }
 
         private void Play(AudioClip clip)
         {

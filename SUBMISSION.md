@@ -37,9 +37,11 @@ A to-do list is easy to write and hard to face. I wanted the three things that m
 
 What it does
 
-PulseDesk XR places a small dock on your real desk with three lanes. Tasks are cards. You can grab a card and drop it in a lane, pinch it from a distance, or keep your hand on your leg and flick your thumb. A card in Urgent starts a sprint with a tone at the halfway point and an alert near the end. You set the sprint length from 1 to 60 minutes with two buttons beside the timer. A card in Done plays a chime and adds to your count for the day.
+PulseDesk XR places a small dock on your real desk with three lanes. Tasks are cards. You can grab a card and drop it in a lane, pinch it from a distance, or keep your hand on your leg and flick your thumb. A card in Urgent starts a sprint with a tone at the halfway point and an alert near the end. One tap on "Done" finishes it, and one tap on "+5" gives it five more minutes.
 
-You add a task by typing or dictating one line with the headset keyboard. The app reads times out of the line, so "Call the bank at 3pm" becomes a card that is due at 15:00 and "Write report for 25 min" gets a 25 minute sprint. Five minutes before a task is due the dock plays a soft tone, and when it is due it plays an alert and highlights the card. The banner always shows the one thing to know right now, which is the running sprint, anything overdue, or what is due next. Routines add three ready-made steps for common jobs. Cards can be deleted and the Done lane cleared. The board is saved, so tomorrow your open tasks are still there and yesterday's finished pile is gone.
+The board moves itself forward. When a sprint is finished the next card starts by itself, and the card with the earliest due time goes first. When a task comes due and nothing is running, it starts by itself. A compact mode hides everything except the running sprint, so the dock can sit beside a laptop, and it opens back up when time runs out. The header shows open tasks, tasks done today and minutes of focus today.
+
+You add a task by typing or dictating one line with the headset keyboard. The app reads times out of the line, so "Call the bank at 3pm" becomes a card that is due at 15:00 and "Write report for 25 min" gets a 25 minute sprint. Five minutes before a task is due the dock plays a soft tone, and when it is due it plays an alert and highlights the card. The banner always shows the one thing to know right now, which is the running sprint, anything overdue, or what is due next. Routines add three timed steps for common jobs and start the first one. Deleting a card or clearing the board can be undone with one tap. The board is saved, so tomorrow your open tasks are still there and yesterday's finished pile is gone.
 
 How I built it
 

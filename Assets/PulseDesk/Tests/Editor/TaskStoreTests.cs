@@ -217,6 +217,82 @@ namespace PulseDesk.Tests
         }
 
         [Test]
+        public void NextCardStartsByItselfAndDueCardsGoFirst()
+        {
+            TaskStore s = NewStore();
+            TaskItem plain = s.Add("Plain");
+            TaskItem timed = s.Add("Timed", "", 10f);
+            s.SetDue(timed.id, _now.AddHours(2));
+
+            s.CompleteSprint();
+            Assert.IsNull(s.ActiveSprint());
+            s.AutoFlowTick(1f);
+            Assert.IsNull(s.ActiveSprint(), "a short pause before the next one starts");
+            s.AutoFlowTick(2.5f);
+            Assert.AreSame(timed, s.ActiveSprint(), "the card with a due time is first in line");
+            Assert.AreEqual(600f, timed.remainingSeconds, "it runs for its own length");
+
+            s.Tick(120f);
+            Assert.AreEqual(2, s.FocusMinutesToday);
+            s.AddSprintMinutes(5);
+            Assert.AreEqual(780f, timed.remainingSeconds, 0.01f);
+            Assert.IsNotNull(plain);
+        }
+
+        [Test]
+        public void DueCardTakesOverOnlyWhenNothingIsRunning()
+        {
+            TaskStore s = NewStore();
+            TaskItem a = s.Add("A");
+            s.SetDue(a.id, _now.AddMinutes(1));
+            _now = _now.AddMinutes(2);
+            s.CheckDue();
+            Assert.AreEqual(TaskLane.Next, a.lane, "a running sprint is not interrupted");
+
+            TaskItem b = s.Add("B");
+            s.SetDue(b.id, _now.AddMinutes(1));
+            s.CompleteSprint();
+            _now = _now.AddMinutes(2);
+            s.CheckDue();
+            Assert.AreSame(b, s.ActiveSprint(), "with nothing running the due card starts");
+        }
+
+        [Test]
+        public void ClearAllAndUndo()
+        {
+            TaskStore s = NewStore();
+            s.Add("A");
+            int before = s.Tasks.Count;
+            int resets = 0;
+            s.BoardReset += () => resets++;
+
+            Assert.AreEqual(before, s.ClearAll());
+            Assert.AreEqual(0, s.Tasks.Count);
+            Assert.IsTrue(s.CanUndo);
+            Assert.IsTrue(s.Undo());
+            Assert.AreEqual(before, s.Tasks.Count);
+            Assert.IsNotNull(s.ActiveSprint(), "the running sprint comes back too");
+            Assert.AreEqual(2, resets);
+            Assert.IsFalse(s.Undo(), "one step of undo");
+
+            TaskItem last = s.Tasks[s.Tasks.Count - 1];
+            s.Remove(last.id);
+            Assert.IsTrue(s.Undo());
+            Assert.AreEqual(before, s.Tasks.Count);
+        }
+
+        [Test]
+        public void RoutineStepsCarryTheirOwnLength()
+        {
+            System.Collections.Generic.List<string> steps = GoalDecomposer.Split("Deep work 25m");
+            Assert.AreEqual(3, steps.Count);
+            QuickTask q = QuickAdd.Parse(steps[1], _now);
+            Assert.AreEqual(20f, q.minutes);
+            Assert.AreEqual("Heads down on the one deliverable", q.title);
+            Assert.IsFalse(q.hasDue);
+        }
+
+        [Test]
         public void QuickAddReadsTimesAndLengths()
         {
             DateTime now = new DateTime(2026, 11, 16, 10, 0, 0);

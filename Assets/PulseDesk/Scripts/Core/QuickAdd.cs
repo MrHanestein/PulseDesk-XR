@@ -22,6 +22,7 @@ namespace PulseDesk
         private const string Unit = @"(minutes?|mins?|m|hours?|hrs?|h)";
 
         private static readonly Regex InRx = new Regex(@"\bin\s+(\d{1,3})\s*" + Unit + @"\b", Opt);
+        private static readonly Regex PrefixRx = new Regex(@"^\s*(\d{1,3})\s*" + Unit + @"\s*:\s*", Opt);
         private static readonly Regex ForRx = new Regex(@"\bfor\s+(\d{1,3})\s*" + Unit + @"\b", Opt);
         // "at 3pm", "at 3:30 pm", "by 15:00". A bare "at 3" only counts at the end of the line.
         private static readonly Regex AtRx = new Regex(@"\b(?:at|by)\s+(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm)?(?=\s|$|[,.!?])", Opt);
@@ -31,7 +32,9 @@ namespace PulseDesk
             QuickTask q = new QuickTask();
             string rest = (text ?? "").Trim();
 
-            Match m = ForRx.Match(rest);
+            // "10m: Review notes" or "for 25 min" sets the sprint length.
+            Match m = PrefixRx.Match(rest);
+            if (!m.Success) m = ForRx.Match(rest);
             if (m.Success)
             {
                 q.minutes = Clamp(ToMinutes(m), 1f, 180f);

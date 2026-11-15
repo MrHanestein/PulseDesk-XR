@@ -14,6 +14,9 @@ namespace PulseDesk
         public Transform slot;
         public TextMeshPro badge;
 
+        /// <summary>True in compact mode: the lane and its cards are not shown.</summary>
+        public bool hidden;
+
         public Vector3 StackOffset(int indexFromFront)
         {
             return new Vector3(0f, indexFromFront * StackUp, indexFromFront * StackBack);

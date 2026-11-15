@@ -31,5 +31,7 @@ namespace PulseDesk
         public string lastDoneDate = "";
         public bool onboardingDone;
         public float defaultMinutes = 5f;
+        public float focusSecondsToday;
+        public string focusDate = "";
     }
 }

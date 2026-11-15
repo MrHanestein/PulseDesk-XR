@@ -10,10 +10,10 @@ namespace PulseDesk
     /// <summary>Finds a roughly horizontal surface below eye level using live depth data.</summary>
     public class DepthTableFinder : SurfaceFinder
     {
-        private static readonly float[] SamplePitches = { 38f, 30f, 48f };
+        private static readonly float[] SamplePitches = { 38f, 30f, 48f, 22f, 58f };
         private EnvironmentRaycastManager _raycaster;
 
-        public override float Timeout { get { return 2.0f; } }
+        public override float Timeout { get { return 3.0f; } }
         public override bool KeepTrying { get { return EnvironmentRaycastManager.IsSupported; } }
 
         public override bool TryFind(Vector3 eye, Vector3 forwardFlat, out Vector3 point)

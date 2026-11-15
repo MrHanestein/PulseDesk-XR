@@ -222,7 +222,9 @@ namespace PulseDesk.EditorTools
                     if (ds != null)
                     {
                         for (int i = 0; i < ds.enumNames.Length; i++)
-                            if (ds.enumNames[i] == "DeviceWithPrefabFallback") ds.enumValueIndex = i;
+                            if (ds.enumNames[i] == "Device") ds.enumValueIndex = i;   // never a sample room on a headset
+                        // MrukTableFinder loads the scan itself, without ever starting Space Setup.
+                        SetBool(so, "SceneSettings.LoadSceneOnStartup", false);
                         Debug.Log("PulseDesk: MRUK data source = " + ds.enumNames[ds.enumValueIndex]);
                     }
                     so.ApplyModifiedPropertiesWithoutUndo();

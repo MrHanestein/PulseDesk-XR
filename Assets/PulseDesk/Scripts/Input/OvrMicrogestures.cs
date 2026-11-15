@@ -32,16 +32,17 @@ namespace PulseDesk
                 _nextScan = Time.unscaledTime + 1f;
                 _hands = FindObjectsByType<OVRHand>(FindObjectsSortMode.None);
             }
-            if (Time.unscaledTime - _lastGesture < 0.25f) return;
-
+            // Read every hand every frame so no gesture is left unread; act on at most one per quarter second.
+            bool ready = Time.unscaledTime - _lastGesture >= 0.25f;
             for (int i = 0; i < _hands.Length; i++)
             {
                 OVRHand hand = _hands[i];
                 if (hand == null || !hand.isActiveAndEnabled || !hand.IsTracked) continue;
-                if (Handle(hand.GetMicrogestureType()))
+                OVRHand.MicrogestureType gesture = hand.GetMicrogestureType();
+                if (ready && Handle(gesture))
                 {
                     _lastGesture = Time.unscaledTime;
-                    return;
+                    ready = false;
                 }
             }
         }

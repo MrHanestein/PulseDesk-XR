@@ -258,6 +258,25 @@ namespace PulseDesk.Tests
         }
 
         [Test]
+        public void NewDayShowsWhatTheLastDayCameTo()
+        {
+            TaskStore s = NewStore();
+            Assert.IsNull(s.NewDayRecap, "nothing to report on a first run");
+            s.Tick(125f);
+            s.CompleteSprint();
+            s.Save();
+
+            s = NewStore();
+            Assert.IsNull(s.NewDayRecap, "same day: no recap");
+
+            _now = _now.AddDays(1);
+            s = NewStore();
+            Assert.AreEqual("Last time: 1 done, 2m focus", s.NewDayRecap);
+            Assert.AreEqual(0, s.FocusMinutesToday);
+            Assert.AreEqual(0, s.CountIn(TaskLane.Done), "yesterday's finished pile is gone");
+        }
+
+        [Test]
         public void ClearAllAndUndo()
         {
             TaskStore s = NewStore();
@@ -325,6 +344,26 @@ namespace PulseDesk.Tests
 
             q = QuickAdd.Parse("Lunch at 1", now);
             Assert.AreEqual(new DateTime(2026, 11, 16, 13, 0, 0), q.due, "a bare small hour means the afternoon");
+
+            // Hours and minutes, with or without "for".
+            q = QuickAdd.Parse("Gym 1h 30m", now);
+            Assert.AreEqual("Gym", q.title);
+            Assert.AreEqual(90f, q.minutes);
+            Assert.AreEqual(90f, QuickAdd.Parse("Deep work for 1 hour and 30 minutes", now).minutes);
+            Assert.AreEqual(90f, QuickAdd.Parse("Deep work 1.5h", now).minutes);
+            Assert.AreEqual(90f, QuickAdd.Parse("Deep work 1h30m", now).minutes);
+            Assert.AreEqual(45f, QuickAdd.Parse("Read chapter 45 min", now).minutes);
+            Assert.AreEqual(120f, QuickAdd.Parse("2 hours: Write thesis section", now).minutes);
+            q = QuickAdd.Parse("Slides 40m at 2pm", now);
+            Assert.AreEqual("Slides", q.title);
+            Assert.AreEqual(40f, q.minutes);
+            Assert.AreEqual(new DateTime(2026, 11, 16, 14, 0, 0), q.due);
+            q = QuickAdd.Parse("Call mum in 1h 15m", now);
+            Assert.AreEqual(now.AddMinutes(75), q.due);
+            Assert.AreEqual(0f, q.minutes);
+            Assert.AreEqual(0f, QuickAdd.Parse("Buy 5 metres of cable", now).minutes, "not a length of time");
+            Assert.AreEqual("1h 30m", QuickAdd.FormatMinutes(90f));
+            Assert.AreEqual("45m", QuickAdd.FormatMinutes(45f));
 
             Assert.AreEqual("15:00", QuickAdd.FormatDue(new DateTime(2026, 11, 16, 15, 0, 0), now));
             Assert.AreEqual("tomorrow 09:30", QuickAdd.FormatDue(new DateTime(2026, 11, 17, 9, 30, 0), now));

@@ -33,7 +33,10 @@ namespace PulseDesk
         public float DefaultMinutes { get { return _save.defaultMinutes; } }
 
         /// <summary>Sprint lengths the - and + buttons step through, in minutes.</summary>
-        public static readonly int[] SprintSteps = { 1, 5, 10, 15, 20, 25, 30, 45, 60 };
+        public static readonly int[] SprintSteps = { 1, 5, 10, 15, 20, 25, 30, 45, 60, 90, 120 };
+
+        /// <summary>On the first launch of a new day: what the last day came to, for the welcome line. Otherwise null.</summary>
+        public string NewDayRecap { get; private set; }
 
         private const string DateFormat = "yyyy-MM-dd";
         private PulseDeskSave _save = new PulseDeskSave();
@@ -608,17 +611,24 @@ namespace PulseDesk
             // New day: clear yesterday's Done pile, reset today's count, break the streak if a day was missed.
             string today = Clock().ToString(DateFormat);
             string yesterday = Clock().AddDays(-1).ToString(DateFormat);
+            int lastDone = 0;
+            int lastFocus = 0;
             if (_save.lastDoneDate != today)
             {
+                lastDone = _save.doneToday;
                 _save.tasks.RemoveAll(x => x.lane == TaskLane.Done);
                 _save.doneToday = 0;
                 if (_save.lastDoneDate != yesterday) _save.dayStreak = 0;
             }
             if (_save.focusDate != today)
             {
+                lastFocus = Mathf.FloorToInt(_save.focusSecondsToday / 60f);
                 _save.focusDate = today;
                 _save.focusSecondsToday = 0f;
             }
+            NewDayRecap = lastDone > 0 || lastFocus > 0
+                ? "Last time: " + lastDone + " done, " + QuickAdd.FormatMinutes(lastFocus) + " focus"
+                : null;
         }
 
         public void Save()

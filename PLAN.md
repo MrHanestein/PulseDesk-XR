@@ -7,7 +7,8 @@ One person, one headset. The deadline is Wednesday 18 November 2026 at 20:00 GMT
 Done and checked on the PC
 
 - The code compiles with hands, thumb gestures, room scan placement and depth placement all switched on.
-- Sixteen unit tests pass.
+- Seventeen unit tests pass.
+- A read-through of the headset code against the Meta SDK source found five bugs, now fixed. The worst one would have put the pinch point on the wrong finger joint.
 - A scripted run in the editor shows the dock, three lanes and the starter cards. It moves a card to Done, adds a typed task and one with a due time, adds a routine that starts its first step, removes a card and undoes it, clears Done, switches to compact mode and moves the dock, with no errors.
 - The APK builds, is signed with the release key and contains only arm64 code.
 
@@ -41,6 +42,9 @@ Put the controllers in another room first.
 - [ ] Poke "Done" beside the timer. A chime plays and three seconds later the next card starts by itself
 - [ ] Poke "+5". The timer gains five minutes
 - [ ] With nothing running, poke "Start". The front card in Next begins
+- [ ] Type "gym 1h 30m". The card shows a 90 minute sprint
+- [ ] The app never opens Space Setup by itself, in a scanned or an unscanned room
+- [ ] Open the system menu with the palm-up pinch. No card is grabbed by that pinch
 - [ ] Poke "Compact". Only the banner and the sprint remain. Poke "Expand" to bring the board back
 - [ ] In compact mode let a 1 minute sprint run out. The timer pulses in the last minute and the full board returns at zero
 - [ ] Poke "New task". The system keyboard opens. Type a task and confirm. A card arrives in Next

@@ -80,7 +80,8 @@ namespace PulseDesk
             if (h == null) return s;
 
             s.valid = true;
-            s.pinching = h.hand.GetFingerIsPinching(OVRHand.HandFinger.Index);
+            // The palm-up pinch that opens the system menu is not a pinch for the app.
+            s.pinching = !h.hand.IsSystemGestureInProgress && h.hand.GetFingerIsPinching(OVRHand.HandFinger.Index);
 
             CacheTips(h);
             if (h.indexTip != null && h.thumbTip != null)
@@ -118,12 +119,16 @@ namespace PulseDesk
             if (h.indexTip != null || h.skeleton == null || !h.skeleton.IsInitialized) return;
             IList<OVRBone> bones = h.skeleton.Bones;
             if (bones == null) return;
+            // Compare bone ids, never their names: the enum reuses the same numbers for the legacy hand,
+            // the OpenXR hand and the body skeletons, so ToString() can return the wrong name.
+            OVRSkeleton.SkeletonType type = h.skeleton.GetSkeletonType();
+            bool xr = type == OVRSkeleton.SkeletonType.XRHandLeft || type == OVRSkeleton.SkeletonType.XRHandRight;
+            OVRSkeleton.BoneId indexId = xr ? OVRSkeleton.BoneId.XRHand_IndexTip : OVRSkeleton.BoneId.Hand_IndexTip;
+            OVRSkeleton.BoneId thumbId = xr ? OVRSkeleton.BoneId.XRHand_ThumbTip : OVRSkeleton.BoneId.Hand_ThumbTip;
             for (int i = 0; i < bones.Count; i++)
             {
-                // Matches both the legacy (Hand_IndexTip) and OpenXR (XRHand_IndexTip) skeletons.
-                string id = bones[i].Id.ToString();
-                if (id.EndsWith("IndexTip")) h.indexTip = bones[i].Transform;
-                else if (id.EndsWith("ThumbTip")) h.thumbTip = bones[i].Transform;
+                if (bones[i].Id == indexId) h.indexTip = bones[i].Transform;
+                else if (bones[i].Id == thumbId) h.thumbTip = bones[i].Transform;
             }
         }
     }

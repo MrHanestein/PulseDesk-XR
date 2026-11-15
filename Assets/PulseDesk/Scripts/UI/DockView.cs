@@ -52,6 +52,8 @@ namespace PulseDesk
         private string _shownIdle = "";
         private string _shownClear = "";
         private float _nextSlowCheck;
+        private Transform _bar;
+        private const float BarWidth = 0.150f;
 
         public static DockView Build(Transform root, TaskStore store, DockActions actions)
         {
@@ -105,7 +107,16 @@ namespace PulseDesk
                 Color accent = Theme.Accent(order[i]);
 
                 Make.Box("Panel", go.transform, new Vector3(0f, 0.05f, 0.03f), new Vector3(0.165f, 0.20f, 0.004f), Theme.Panel);
-                Make.Box("Rule", go.transform, new Vector3(0f, 0.117f, 0.0275f), new Vector3(0.150f, 0.0015f, 0.002f), accent);
+                if (order[i] == TaskLane.Urgent)
+                {
+                    // In the sprint lane the rule under the heading is the progress bar: it drains as time runs out.
+                    Make.Box("Track", go.transform, new Vector3(0f, 0.116f, 0.0282f), new Vector3(BarWidth, 0.005f, 0.002f), Theme.Button);
+                    _bar = Make.Box("Bar", go.transform, new Vector3(0f, 0.116f, 0.0272f), new Vector3(BarWidth, 0.005f, 0.002f), accent).transform;
+                }
+                else
+                {
+                    Make.Box("Rule", go.transform, new Vector3(0f, 0.117f, 0.0275f), new Vector3(0.150f, 0.0015f, 0.002f), accent);
+                }
                 Make.Icon(order[i], go.transform, new Vector3(-0.062f, 0.130f, 0.0265f), accent);
                 TextMeshPro label = Make.Text("Label", go.transform, new Vector3(-0.012f, 0.130f, 0.0272f),
                     new Vector2(0.08f, 0.016f), 9f, accent, TextAlignmentOptions.Left);
@@ -269,7 +280,7 @@ namespace PulseDesk
 
             // Sprint controls: rebuilt only when what they show changes.
             string timer = sprint == null
-                ? "Start " + Mathf.RoundToInt(_store.DefaultMinutes) + "m"
+                ? "Start " + QuickAdd.FormatMinutes(_store.DefaultMinutes)
                 : (paused ? "II " : "") + TaskCardView.FormatTime(seconds);
             if (timer != _shownTimer)
             {
@@ -285,6 +296,11 @@ namespace PulseDesk
                     _rightButton.SetLabel(sprint != null ? "+5" : "+");
                 }
             }
+
+            // Progress bar: full at the start of a sprint, empty when time is up, anchored on the left.
+            float left = sprint == null ? 1f : Mathf.Clamp01(sprint.remainingSeconds / Mathf.Max(1f, sprint.durationSeconds));
+            _bar.localScale = new Vector3(Mathf.Max(0.0005f, BarWidth * left), 0.005f, 0.002f);
+            _bar.localPosition = new Vector3(-BarWidth * 0.5f * (1f - left), 0.116f, 0.0272f);
 
             // Last minute and time-up: the timer pulses so it is noticed from the corner of the eye.
             bool pulse = sprint != null && !paused && seconds <= 60;

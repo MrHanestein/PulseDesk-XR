@@ -138,6 +138,8 @@ namespace PulseDesk
             int open = Store.Tasks.Count - Store.CountIn(TaskLane.Done);
             TaskItem due = Store.NextDue();
             if (due != null && Store.IsOverdue(due)) return "Welcome back. Overdue: " + due.title;
+            if (Store.NewDayRecap != null)
+                return (Store.DayStreak > 1 ? Store.DayStreak + " day streak. " : "New day. ") + Store.NewDayRecap;
             string streak = Store.DayStreak > 1 ? "Day " + Store.DayStreak + " in a row. " : "Welcome back. ";
             if (open == 0) return streak + "Nothing waiting";
             return streak + open + (open == 1 ? " task" : " tasks") + " waiting";
@@ -205,6 +207,12 @@ namespace PulseDesk
 
         // ---------- commands (also the hook for voice) ----------
 
+        /// <summary>Re-places the dock if it is sitting at the fixed fallback because no surface was known yet.</summary>
+        public void RecenterIfFallback()
+        {
+            if (_placer != null && _placer.LastMethod == "Fixed position") _placer.Recenter();
+        }
+
         /// <summary>"Move dock here".</summary>
         public void Recenter()
         {
@@ -236,7 +244,7 @@ namespace PulseDesk
                 () => _dock.ShowBanner("Nothing added", false));
             if (started)
             {
-                _dock.ShowBanner("Type or dictate. Try \"Call the bank at 3pm\"", false);
+                _dock.ShowBanner("Try \"Call the bank at 3pm\" or \"Report 1h 30m\"", false);
             }
             else
             {
@@ -274,7 +282,7 @@ namespace PulseDesk
             if (_dock != null)
             {
                 string note = q.hasDue ? ", due " + QuickAdd.FormatDue(q.due, Store.Clock()) : "";
-                if (q.minutes > 0f) note += ", " + Mathf.RoundToInt(q.minutes) + " min sprint";
+                if (q.minutes > 0f) note += ", " + QuickAdd.FormatMinutes(q.minutes) + " sprint";
                 _dock.ShowBanner("Added: " + title + note, false);
             }
             CheckOnboarding();

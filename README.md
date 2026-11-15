@@ -4,7 +4,7 @@ A task board that sits on your real desk. Built for Meta Quest 3 and 3S, used wi
 
 The app puts a small dock in front of you with three lanes called Next, Urgent and Done. Tasks are cards. You pick a card up and drop it in a lane, or pinch it from a distance, or flick your thumb while your hand rests on your leg. A card in Urgent starts a timed sprint. A card in Done plays a chime and adds to your count for the day.
 
-You add a task by typing or dictating one line. The app reads times out of it. "Call the bank at 3pm" becomes a card that is due at 15:00. "Stretch in 20 min" is due twenty minutes from now. "Write report for 25 min" gets a 25 minute sprint. The dock sounds a soft tone five minutes before a task is due and a louder one when it is due, so nothing in the day is missed while you work on something else.
+You add a task by typing or dictating one line. The app reads times out of it. "Call the bank at 3pm" becomes a card that is due at 15:00. "Stretch in 20 min" is due twenty minutes from now. "Write report for 25 min" gets a 25 minute sprint, and so does a length at the end of the line with no "for", such as "Gym 1h 30m" or "Read chapter 45 min". The dock sounds a soft tone five minutes before a task is due and a louder one when it is due, so nothing in the day is missed while you work on something else.
 
 This is my entry for the Meta VR Start Developer Competition 2026, Productivity track, New Experience division. I am building it alone.
 

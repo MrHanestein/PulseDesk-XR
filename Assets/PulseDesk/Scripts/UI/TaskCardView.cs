@@ -62,11 +62,11 @@ namespace PulseDesk
             v._title.overflowMode = TextOverflowModes.Truncate;
             v._title.richText = true;   // the due time is coloured inside the title
             v._step = Make.Text("Step", v._contents, new Vector3(0.006f, -0.010f, z), new Vector2(0.118f, 0.026f),
-                6f, Theme.TextDim, TextAlignmentOptions.TopLeft);
-            v._laneLabel = Make.Text("Lane", v._contents, new Vector3(-0.025f, -0.032f, z), new Vector2(0.056f, 0.010f),
-                5.5f, Theme.Next, TextAlignmentOptions.Left);
-            v._timer = Make.Text("Timer", v._contents, new Vector3(0.038f, -0.032f, z), new Vector2(0.054f, 0.010f),
-                5.5f, Theme.TextDim, TextAlignmentOptions.Right);
+                7f, Theme.TextDim, TextAlignmentOptions.TopLeft);
+            v._laneLabel = Make.Text("Lane", v._contents, new Vector3(-0.030f, -0.031f, z), new Vector2(0.046f, 0.012f),
+                6.5f, Theme.Next, TextAlignmentOptions.Left);
+            v._timer = Make.Text("Timer", v._contents, new Vector3(0.030f, -0.031f, z), new Vector2(0.070f, 0.012f),
+                6.5f, Theme.TextDim, TextAlignmentOptions.Right);
 
             v.Refresh();
             return v;

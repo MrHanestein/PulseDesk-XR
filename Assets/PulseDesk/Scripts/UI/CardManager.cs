@@ -23,6 +23,8 @@ namespace PulseDesk
             _store.TaskAdded += OnAdded;
             _store.TaskMoved += OnMoved;
             _store.FocusChanged += OnFocus;
+            _store.TaskRemoved += OnRemoved;
+            _store.TaskChanged += OnChanged;
 
             for (int i = 0; i < _store.Tasks.Count; i++) CreateCard(_store.Tasks[i]);
             Relayout();
@@ -36,6 +38,25 @@ namespace PulseDesk
             _store.TaskAdded -= OnAdded;
             _store.TaskMoved -= OnMoved;
             _store.FocusChanged -= OnFocus;
+            _store.TaskRemoved -= OnRemoved;
+            _store.TaskChanged -= OnChanged;
+        }
+
+        private void OnRemoved(TaskItem item)
+        {
+            TaskCardView v;
+            if (_cards.TryGetValue(item.id, out v))
+            {
+                _cards.Remove(item.id);
+                if (v != null) Destroy(v.gameObject);
+            }
+            Relayout();
+        }
+
+        private void OnChanged(TaskItem item)
+        {
+            TaskCardView v;
+            if (_cards.TryGetValue(item.id, out v)) v.Refresh();
         }
 
         private TaskCardView CreateCard(TaskItem item)
@@ -71,6 +92,14 @@ namespace PulseDesk
         /// <summary>Called by a card when the hand lets go of it.</summary>
         public void HandleDrop(TaskCardView card)
         {
+            // Dropping a card on "Remove card" deletes it.
+            if (_dock.RemoveButton != null
+                && Vector3.Distance(card.transform.position, _dock.RemoveButton.transform.position) < 0.07f)
+            {
+                _store.Remove(card.TaskId);
+                return;
+            }
+
             DockLane nearest = null;
             float best = DropRadius;
             for (int i = 0; i < _dock.Lanes.Length; i++)

@@ -140,5 +140,118 @@ namespace PulseDesk.Tests
             Assert.AreEqual(3, GoalDecomposer.Split("taxes").Count);
             Assert.AreEqual(0, GoalDecomposer.Split("  ").Count);
         }
+
+        [Test]
+        public void RemoveAndClearDone()
+        {
+            TaskStore s = NewStore();
+            TaskItem a = s.Add("A");
+            TaskItem b = s.Add("B");
+            int before = s.Tasks.Count;
+            s.SetFocus(a.id);
+            Assert.IsTrue(s.Remove(a.id));
+            Assert.AreEqual(before - 1, s.Tasks.Count);
+            Assert.AreNotSame(a, s.Focused, "focus leaves a removed card");
+            Assert.IsFalse(s.Remove("nope"));
+
+            s.Move(b.id, TaskLane.Done);
+            Assert.AreEqual(1, s.ClearDone());
+            Assert.AreEqual(0, s.CountIn(TaskLane.Done));
+            Assert.AreEqual(1, s.DoneToday, "clearing the pile keeps today's count");
+        }
+
+        [Test]
+        public void SprintLengthCanBeChanged()
+        {
+            TaskStore s = NewStore();
+            TaskItem sprint = s.ActiveSprint();
+            s.Move(sprint.id, TaskLane.Done);
+
+            // No sprint running: changes the default and every card that has not started.
+            TaskItem a = s.Add("A");
+            s.AdjustSprint(1);
+            Assert.AreEqual(10f, s.DefaultMinutes);
+            Assert.AreEqual(600f, a.durationSeconds);
+            Assert.AreEqual(600f, s.Add("B").durationSeconds);
+
+            // Sprint running: changes that sprint only.
+            s.Move(a.id, TaskLane.Urgent);
+            s.Tick(60f);
+            s.AdjustSprint(1);
+            Assert.AreEqual(900f, a.durationSeconds);
+            Assert.AreEqual(840f, a.remainingSeconds, 0.01f);
+            Assert.AreEqual(10f, s.DefaultMinutes);
+            for (int i = 0; i < 10; i++) s.AdjustSprint(-1);
+            Assert.AreEqual(60f, a.durationSeconds, "never below one minute");
+            Assert.Greater(a.remainingSeconds, 0f);
+        }
+
+        [Test]
+        public void DueTimesAlertOnceEach()
+        {
+            TaskStore s = NewStore();
+            TaskItem a = s.Add("Call the bank");
+            s.SetDue(a.id, _now.AddMinutes(20));
+            int urgent = 0, nudges = 0;
+            s.Alert += (m, u) => { if (u) urgent++; };
+            s.Nudge += () => nudges++;
+
+            s.CheckDue();
+            Assert.AreEqual(0, nudges + urgent, "nothing yet");
+            Assert.AreSame(a, s.NextDue());
+
+            _now = _now.AddMinutes(16);
+            s.CheckDue();
+            s.CheckDue();
+            Assert.AreEqual(1, nudges, "one heads-up five minutes before");
+
+            _now = _now.AddMinutes(5);
+            s.CheckDue();
+            s.CheckDue();
+            Assert.AreEqual(1, urgent, "one alert when due");
+            Assert.IsTrue(s.IsOverdue(a));
+            Assert.AreSame(a, s.Focused, "the due card becomes the highlighted one");
+
+            s.Move(a.id, TaskLane.Done);
+            Assert.IsNull(s.NextDue());
+        }
+
+        [Test]
+        public void QuickAddReadsTimesAndLengths()
+        {
+            DateTime now = new DateTime(2026, 11, 16, 10, 0, 0);
+
+            QuickTask q = QuickAdd.Parse("call the bank at 3pm", now);
+            Assert.AreEqual("Call the bank", q.title);
+            Assert.IsTrue(q.hasDue);
+            Assert.AreEqual(new DateTime(2026, 11, 16, 15, 0, 0), q.due);
+
+            q = QuickAdd.Parse("Stand-up at 9:30", now);
+            Assert.AreEqual(new DateTime(2026, 11, 17, 9, 30, 0), q.due, "a time already past means tomorrow");
+
+            q = QuickAdd.Parse("stretch in 20 min", now);
+            Assert.AreEqual("Stretch", q.title);
+            Assert.AreEqual(now.AddMinutes(20), q.due);
+
+            q = QuickAdd.Parse("Write report for 25 min", now);
+            Assert.AreEqual("Write report", q.title);
+            Assert.AreEqual(25f, q.minutes);
+            Assert.IsFalse(q.hasDue);
+
+            q = QuickAdd.Parse("Review slides for 1 hour by 14:00", now);
+            Assert.AreEqual("Review slides", q.title);
+            Assert.AreEqual(60f, q.minutes);
+            Assert.AreEqual(new DateTime(2026, 11, 16, 14, 0, 0), q.due);
+
+            q = QuickAdd.Parse("Look at 3 options", now);
+            Assert.IsFalse(q.hasDue, "a bare number mid-sentence is not a time");
+            Assert.AreEqual("Look at 3 options", q.title);
+
+            q = QuickAdd.Parse("Lunch at 1", now);
+            Assert.AreEqual(new DateTime(2026, 11, 16, 13, 0, 0), q.due, "a bare small hour means the afternoon");
+
+            Assert.AreEqual("15:00", QuickAdd.FormatDue(new DateTime(2026, 11, 16, 15, 0, 0), now));
+            Assert.AreEqual("tomorrow 09:30", QuickAdd.FormatDue(new DateTime(2026, 11, 17, 9, 30, 0), now));
+        }
     }
 }

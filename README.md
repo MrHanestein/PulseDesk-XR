@@ -2,7 +2,9 @@
 
 A task board that sits on your real desk. Built for Meta Quest 3 and 3S, used with bare hands.
 
-The app puts a small dock in front of you with three lanes called Next, Urgent and Done. Tasks are cards. You pick a card up and drop it in a lane, or pinch it from a distance, or flick your thumb while your hand rests on your leg. A card in Urgent starts a five minute sprint. A card in Done plays a chime and adds to your streak for the day.
+The app puts a small dock in front of you with three lanes called Next, Urgent and Done. Tasks are cards. You pick a card up and drop it in a lane, or pinch it from a distance, or flick your thumb while your hand rests on your leg. A card in Urgent starts a timed sprint. A card in Done plays a chime and adds to your count for the day.
+
+You add a task by typing or dictating one line. The app reads times out of it. "Call the bank at 3pm" becomes a card that is due at 15:00. "Stretch in 20 min" is due twenty minutes from now. "Write report for 25 min" gets a 25 minute sprint. The dock sounds a soft tone five minutes before a task is due and a louder one when it is due, so nothing in the day is missed while you work on something else.
 
 This is my entry for the Meta VR Start Developer Competition 2026, Productivity track, New Experience division. I am building it alone.
 
@@ -13,9 +15,14 @@ This is my entry for the Meta VR Start Developer Competition 2026, Productivity 
 | Move a card | Pinch it and carry it to a lane | Point, pinch and drag | Thumb swipe left for Urgent, right for Done |
 | Choose a different card | Touch it | Point at it | Thumb swipe forward or back |
 | Pause or resume the sprint | Poke the timer | Pinch the timer | Thumb tap |
-| Add your own task | Poke "New task" and type | Pinch "New task" | |
-| Split a goal into three steps | Poke "Break it down" | Pinch "Break it down" | |
-| Put the dock somewhere else | Poke "Move dock here" | Pinch it | |
+| Make the sprint shorter or longer | Poke the minus or plus beside the timer | Pinch them | |
+| Add your own task | Poke "New task", then type or dictate | Pinch "New task" | |
+| Add a ready-made routine of three steps | Poke "Routines" and pick one | Pinch "Routines" | |
+| Delete a card | Drop it on "Remove card", or highlight it and poke the button | Pinch "Remove card" | |
+| Empty the Done lane | Poke "Clear done" | Pinch it | |
+| Put the dock somewhere else | Poke "Move dock" | Pinch it | |
+
+Sprints can run 1, 5, 10, 15, 20, 25, 30, 45 or 60 minutes. With no sprint running, the minus and plus buttons set the length for every card that has not started yet.
 
 No controller is needed at any point. Typing uses the headset's own keyboard, which works with hands and without internet.
 
@@ -49,7 +56,7 @@ powershell -File tools\unity.ps1 -Method PulseDesk.EditorTools.PulseDeskAutomati
 
 ```
 Assets/PulseDesk/
-  Scripts/Core         tasks, saving, streak, sprint timer, goal splitting (unit tested)
+  Scripts/Core         tasks, saving, streak, sprint timer, due times, reading typed lines (unit tested)
   Scripts/App          the one scene component, sounds, typed text
   Scripts/Interaction  pinch, ray and poke handling
   Scripts/Input        Meta hand tracking, thumb gestures, mouse and keyboard

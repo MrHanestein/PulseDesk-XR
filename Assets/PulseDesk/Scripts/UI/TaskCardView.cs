@@ -27,6 +27,7 @@ namespace PulseDesk
         private bool _hovered;
         private bool _focused;
         private int _shownSeconds = -1;
+        private bool _shownOverdue;
         private TaskLane _shownLane = (TaskLane)(-1);
 
         public override bool Draggable { get { return true; } }
@@ -59,6 +60,7 @@ namespace PulseDesk
             v._title.enableWordWrapping = false;
 #endif
             v._title.overflowMode = TextOverflowModes.Truncate;
+            v._title.richText = true;   // the due time is coloured inside the title
             v._step = Make.Text("Step", v._contents, new Vector3(0.006f, -0.010f, z), new Vector2(0.118f, 0.026f),
                 6f, Theme.TextDim, TextAlignmentOptions.TopLeft);
             v._laneLabel = Make.Text("Lane", v._contents, new Vector3(-0.025f, -0.032f, z), new Vector2(0.056f, 0.010f),
@@ -73,7 +75,17 @@ namespace PulseDesk
         /// <summary>Re-reads title, lane colours and timer from the task.</summary>
         public void Refresh()
         {
-            _title.text = _item.title;
+            // The due time leads the title, so it is still visible when the card is stacked behind others.
+            if (_item.dueTicks > 0 && _item.lane != TaskLane.Done && _store != null)
+            {
+                bool late = _store.IsOverdue(_item);
+                string when = QuickAdd.FormatDue(new System.DateTime(_item.dueTicks), _store.Clock());
+                _title.text = "<color=" + (late ? "#F2383F" : "#FCC934") + ">" + (late ? "late " : "") + when + "</color>  " + _item.title;
+            }
+            else
+            {
+                _title.text = _item.title;
+            }
             _step.text = _item.microStep ?? "";
             if (_shownLane != _item.lane)
             {
@@ -153,10 +165,17 @@ namespace PulseDesk
 
             // Rebuild the timer text only when the visible second changes.
             int seconds = _item.lane == TaskLane.Done ? -2 : Mathf.CeilToInt(_item.remainingSeconds);
-            if (seconds != _shownSeconds)
+            bool overdue = _store != null && _store.IsOverdue(_item);
+            if (seconds != _shownSeconds || overdue != _shownOverdue)
             {
                 _shownSeconds = seconds;
-                _timer.text = seconds < 0 ? "" : FormatTime(seconds);
+                _shownOverdue = overdue;
+                // A waiting card with a due time shows when it is due; otherwise the sprint time.
+                bool showDue = _item.dueTicks > 0 && _item.lane == TaskLane.Next;
+                if (seconds < 0) _timer.text = "";
+                else if (showDue) _timer.text = (overdue ? "late " : "due ") + QuickAdd.FormatDue(new System.DateTime(_item.dueTicks), _store.Clock());
+                else _timer.text = FormatTime(seconds);
+                _timer.color = overdue ? Theme.Urgent : (showDue ? Theme.TextMain : Theme.TextDim);
             }
         }
 

@@ -345,6 +345,7 @@ namespace PulseDesk.EditorTools
                 if (app != null)
                 {
                     app.AddTask("Email the landlord about the boiler");
+                    app.AddTask("call the bank at 3pm");
                     TaskItem sprint = app.Store.ActiveSprint();
                     if (sprint != null) app.Store.Move(sprint.id, TaskLane.Done);
                     app.SubmitGoal("Plan my day");
@@ -360,8 +361,22 @@ namespace PulseDesk.EditorTools
                 foreach (TaskItem item in app.Store.Tasks) if (item.lane == TaskLane.Done) done++;
                 Debug.Log("PulseDesk smoke: after actions cards=" + cards + " tasks=" + app.Store.Tasks.Count
                           + " done=" + done + " doneToday=" + app.Store.DoneToday + " errors=" + _smokeErrors);
-                if (cards != app.Store.Tasks.Count || done != 1 || app.Store.Tasks.Count != 7) _smokeErrors++;
+                if (cards != app.Store.Tasks.Count || done != 1 || app.Store.Tasks.Count != 8
+                    || app.Store.NextDue() == null) _smokeErrors++;
                 Shot("shot-2-after");
+                app.RemoveFocused();
+                app.ClearDone();
+                app.Store.AdjustSprint(1);
+            }
+            else if (_smokePhase == 2 && t > 10)
+            {
+                _smokePhase = 3;
+                int cards = UnityEngine.Object.FindObjectsByType<TaskCardView>(FindObjectsInactive.Include).Length;
+                Debug.Log("PulseDesk smoke: after remove and clear cards=" + cards + " tasks=" + app.Store.Tasks.Count
+                          + " default=" + app.Store.DefaultMinutes + " errors=" + _smokeErrors);
+                if (cards != 6 || app.Store.Tasks.Count != 6 || app.Store.CountIn(TaskLane.Done) != 0
+                    || app.Store.DoneToday != 1 || app.Store.DefaultMinutes != 10f) _smokeErrors++;
+                Shot("shot-3-cleared");
                 SessionState.SetBool(SmokeKey, false);
                 PulseDeskMenu.ResetSave();
                 Debug.Log("PulseDesk smoke: " + (_smokeErrors == 0 ? "PASS" : "FAIL"));

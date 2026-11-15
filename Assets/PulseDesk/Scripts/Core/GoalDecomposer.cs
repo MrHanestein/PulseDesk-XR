@@ -43,15 +43,18 @@ namespace PulseDesk
         }
     }
 
-    /// <summary>Hand-written breakdowns for the goals offered on the dock.</summary>
+    /// <summary>
+    /// Routines offered on the dock. Picking one adds its three steps to Next as cards;
+    /// it does not do the work for you, so the names are nouns, not commands.
+    /// </summary>
     public static class GoalPresets
     {
         public static readonly string[] Titles =
         {
             "Plan my day",
-            "Clear my inbox",
-            "Prepare a presentation",
-            "Tidy my workspace"
+            "Inbox routine",
+            "Presentation prep",
+            "Desk reset"
         };
 
         private static readonly string[][] Steps =

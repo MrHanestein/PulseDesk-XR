@@ -56,6 +56,8 @@ namespace PulseDesk
             Store.Alert += OnAlert;
             Store.TaskMoved += OnMoved;
             Store.FocusChanged += OnFocusChanged;
+            Store.TaskRemoved += OnRemoved;
+            Store.Nudge += _sfx.Nudge;
             _placer.DockPlaced += OnDockPlaced;
             _placer.Begin(_head);
         }
@@ -68,6 +70,8 @@ namespace PulseDesk
                 Store.Alert -= OnAlert;
                 Store.TaskMoved -= OnMoved;
                 Store.FocusChanged -= OnFocusChanged;
+                Store.TaskRemoved -= OnRemoved;
+                if (_sfx != null) Store.Nudge -= _sfx.Nudge;
             }
         }
 
@@ -94,16 +98,73 @@ namespace PulseDesk
         {
             if (_dock == null)
             {
-                _dock = DockView.Build(dockRoot, Store, Recenter, SubmitGoal, NewTask);
+                DockActions actions = new DockActions();
+                actions.newTask = NewTask;
+                actions.routine = SubmitGoal;
+                actions.removeFocused = RemoveFocused;
+                actions.clearDone = ClearDone;
+                actions.recenter = Recenter;
+                _dock = DockView.Build(dockRoot, Store, actions);
                 _cards = gameObject.AddComponent<CardManager>();
                 _cards.Init(Store, _dock);
-                if (Store.OnboardingDone) _dock.ShowBanner("Welcome back", false);
+                if (Store.OnboardingDone) _dock.ShowBanner(WelcomeBack(), false);
                 else _dock.ShowBanner("No controllers needed. Pinch a card to pick it up", false);
             }
             else
             {
-                _dock.ShowBanner("Dock moved", false);
+                _dock.ShowBanner("Dock moved to where you are looking", false);
+                _sfx.SprintStart();
             }
+            StartCoroutine(Pop(dockRoot));
+        }
+
+        /// <summary>A short grow-in so a re-placed dock is noticed even when it lands in the same spot.</summary>
+        private static IEnumerator Pop(Transform target)
+        {
+            float t = 0f;
+            while (t < 0.25f && target != null)
+            {
+                t += Time.unscaledDeltaTime;
+                float k = Mathf.Clamp01(t / 0.25f);
+                target.localScale = Vector3.one * Mathf.Lerp(0.8f, 1f, 1f - (1f - k) * (1f - k));
+                yield return null;
+            }
+            if (target != null) target.localScale = Vector3.one;
+        }
+
+        private string WelcomeBack()
+        {
+            int open = Store.Tasks.Count - Store.CountIn(TaskLane.Done);
+            TaskItem due = Store.NextDue();
+            if (due != null && Store.IsOverdue(due)) return "Welcome back. Overdue: " + due.title;
+            if (open == 0) return "Welcome back. Nothing waiting";
+            return "Welcome back. " + open + (open == 1 ? " task" : " tasks") + " waiting";
+        }
+
+        /// <summary>"Remove card": deletes the highlighted card. Dropping a card on the button does the same.</summary>
+        public void RemoveFocused()
+        {
+            TaskItem t = Store.Focused;
+            if (t == null)
+            {
+                if (_dock != null) _dock.ShowBanner("Point at a card first, then pinch Remove card", false);
+                return;
+            }
+            Store.Remove(t.id);
+        }
+
+        /// <summary>"Clear done": empties the Done lane. The day's count and the streak stay.</summary>
+        public void ClearDone()
+        {
+            int n = Store.ClearDone();
+            if (_dock != null) _dock.ShowBanner(n == 0 ? "Nothing in DONE to clear" : "Cleared " + n + " finished", false);
+        }
+
+        private void OnRemoved(TaskItem item)
+        {
+            _sfx.Remove();
+            if (_dock != null && item.lane != TaskLane.Done) _dock.ShowBanner("Removed: " + item.title, false);
+            CheckOnboarding();
         }
 
         // ---------- commands (also the hook for voice) ----------
@@ -133,23 +194,26 @@ namespace PulseDesk
         public void NewTask()
         {
             if (_dock == null || _text.Active) return;
-            bool started = _text.Begin("Type a task",
+            bool started = _text.Begin("Call the bank at 3pm",
                 typed => _dock.ShowBanner("New task: " + typed + "_", false),
                 AddTask,
                 () => _dock.ShowBanner("Nothing added", false));
             if (started)
             {
-                _dock.ShowBanner("Type a task, then confirm", false);
+                _dock.ShowBanner("Type or dictate. Try \"Call the bank at 3pm\"", false);
             }
             else
             {
                 // No keyboard on this device: never a dead end.
                 _dock.OpenPicker();
-                _dock.ShowBanner("No keyboard here. Pick a goal instead", false);
+                _dock.ShowBanner("No keyboard here. Pick a routine instead", false);
             }
         }
 
-        /// <summary>Adds what the user typed. "A then B" or "A; B" becomes several cards.</summary>
+        /// <summary>
+        /// Adds what the user typed or dictated. "at 3pm" or "in 20 min" sets a due time,
+        /// "for 25 min" sets the sprint length, and "A then B" or "A; B" becomes several cards.
+        /// </summary>
         public void AddTask(string text)
         {
             text = (text ?? "").Trim();
@@ -159,29 +223,45 @@ namespace PulseDesk
                 SubmitGoal(text);
                 return;
             }
+
+            QuickTask q = QuickAdd.Parse(text, Store.Clock());
             // Card titles stay short enough to read at a glance; the full text goes underneath.
-            string title = text.Length > 40 ? text.Substring(0, 39).TrimEnd() + "." : text;
-            if (_cards != null && _dock != null && _dock.BreakDownButton != null)
-                _cards.SpawnPoint = _dock.BreakDownButton.transform.position;
-            Store.Add(char.ToUpper(title[0]) + title.Substring(1), text.Length > 40 ? text : "");
-            if (_cards != null) _cards.SpawnPoint = null;
+            bool longTitle = q.title.Length > 40;
+            string title = longTitle ? q.title.Substring(0, 39).TrimEnd() + "." : q.title;
+
+            SetSpawnPoint(true);
+            TaskItem item = Store.Add(title, longTitle ? q.title : "", q.minutes);
+            SetSpawnPoint(false);
+            if (q.hasDue) Store.SetDue(item.id, q.due);
+
             _sfx.Tick();
-            if (_dock != null) _dock.ShowBanner("Added to NEXT: " + title, false);
+            if (_dock != null)
+            {
+                string note = q.hasDue ? ", due " + QuickAdd.FormatDue(q.due, Store.Clock()) : "";
+                if (q.minutes > 0f) note += ", " + Mathf.RoundToInt(q.minutes) + " min sprint";
+                _dock.ShowBanner("Added: " + title + note, false);
+            }
             CheckOnboarding();
+        }
+
+        private void SetSpawnPoint(bool on)
+        {
+            if (_cards == null) return;
+            if (on && _dock != null && _dock.RoutinesButton != null) _cards.SpawnPoint = _dock.RoutinesButton.transform.position;
+            else _cards.SpawnPoint = null;
         }
 
         private IEnumerator AddSteps(string goal, List<string> steps)
         {
-            if (_dock != null) _dock.ShowBanner("Breaking down: " + goal, false);
             for (int i = 0; i < steps.Count; i++)
             {
-                if (_cards != null && _dock != null && _dock.BreakDownButton != null)
-                    _cards.SpawnPoint = _dock.BreakDownButton.transform.position;
+                SetSpawnPoint(true);
                 Store.Add(steps[i], goal);
                 _sfx.Tick();
                 yield return new WaitForSeconds(0.15f);
             }
-            if (_cards != null) _cards.SpawnPoint = null;
+            SetSpawnPoint(false);
+            if (_dock != null) _dock.ShowBanner("Added " + steps.Count + " steps to NEXT: " + goal, false);
             CheckOnboarding();
         }
 
@@ -210,7 +290,7 @@ namespace PulseDesk
         {
             if (Store.OnboardingDone || Store.OnboardingCardsOpen()) return;
             Store.MarkOnboardingDone();
-            if (_dock != null) _dock.ShowBanner("You are set. Break a goal down to fill your board", false);
+            if (_dock != null) _dock.ShowBanner("You are set. Add what your day needs", false);
         }
 
         // ---------- pause when the app loses focus on device ----------

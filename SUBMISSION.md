@@ -37,7 +37,9 @@ A to-do list is easy to write and hard to face. I wanted the three things that m
 
 What it does
 
-PulseDesk XR places a small dock on your real desk with three lanes. Tasks are cards. You can grab a card and drop it in a lane, pinch it from a distance, or keep your hand on your leg and flick your thumb. A card in Urgent starts a five minute sprint with an alert at the halfway point and another near the end. A card in Done plays a chime and adds to your streak for the day. You can type your own task with the headset keyboard, or pick a goal and have it split into three small steps. The board is saved, so tomorrow your open tasks are still there and yesterday's finished pile is cleared.
+PulseDesk XR places a small dock on your real desk with three lanes. Tasks are cards. You can grab a card and drop it in a lane, pinch it from a distance, or keep your hand on your leg and flick your thumb. A card in Urgent starts a sprint with a tone at the halfway point and an alert near the end. You set the sprint length from 1 to 60 minutes with two buttons beside the timer. A card in Done plays a chime and adds to your count for the day.
+
+You add a task by typing or dictating one line with the headset keyboard. The app reads times out of the line, so "Call the bank at 3pm" becomes a card that is due at 15:00 and "Write report for 25 min" gets a 25 minute sprint. Five minutes before a task is due the dock plays a soft tone, and when it is due it plays an alert and highlights the card. The banner always shows the one thing to know right now, which is the running sprint, anything overdue, or what is due next. Routines add three ready-made steps for common jobs. Cards can be deleted and the Done lane cleared. The board is saved, so tomorrow your open tasks are still there and yesterday's finished pile is gone.
 
 How I built it
 
@@ -65,7 +67,7 @@ Aim for 2 minutes 15 seconds. Never go past 2 minutes 55. Show real use. Do not 
 | 0:10 to 0:30 | Bare hands in view. Grab the first starter card and drop it on Done. | No controllers. |
 | 0:30 to 0:55 | Hand resting on the leg. Thumb swipe sends a card to Urgent and the timer starts. | Sort tasks without lifting your arm. |
 | 0:55 to 1:20 | Halfway alert. Pause with a thumb tap. Finish the card. The streak goes up. | |
-| 1:20 to 1:45 | Poke "New task" and type one. Then "Break it down" and three cards land in Next. | |
+| 1:20 to 1:45 | Poke "New task" and dictate "call the bank at 3pm". The card lands with its due time. Then show a due alert firing. | Say it once. The desk remembers. |
 | 1:45 to 2:00 | A different room with no scan. The dock still lands on the table. | Works in rooms it has never seen. |
 | 2:00 to 2:15 | Narrow field of view. Everything still in frame. End card with name and tagline. | |
 

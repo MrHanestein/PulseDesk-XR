@@ -17,6 +17,9 @@ namespace PulseDesk
         public bool alert50;
         public bool alert90;
         public bool alertEnd;
+        public long dueTicks;          // 0 = no due time
+        public bool dueSoonAlerted;
+        public bool dueAlerted;
     }
 
     [Serializable]
@@ -27,5 +30,6 @@ namespace PulseDesk
         public int doneToday;
         public string lastDoneDate = "";
         public bool onboardingDone;
+        public float defaultMinutes = 5f;
     }
 }

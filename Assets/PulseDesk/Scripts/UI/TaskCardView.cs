@@ -70,7 +70,8 @@ namespace PulseDesk
             v._title.enableWordWrapping = false;
 #endif
             v._title.overflowMode = TextOverflowModes.Truncate;
-            v._title.richText = true;   // the due time is coloured inside the title            v._step = Make.Text("Step", v._contents, new Vector3(0.006f, -0.010f, z), new Vector2(0.118f, 0.026f),
+            v._title.richText = true;   // the due time is coloured inside the title
+            v._step = Make.Text("Step", v._contents, new Vector3(0.006f, -0.010f, z), new Vector2(0.118f, 0.026f),
                 7f, Theme.TextDim, TextAlignmentOptions.TopLeft);
             v._laneLabel = Make.Text("Lane", v._contents, new Vector3(-0.030f, -0.031f, z), new Vector2(0.046f, 0.012f),
                 6.5f, Theme.Next, TextAlignmentOptions.Left);

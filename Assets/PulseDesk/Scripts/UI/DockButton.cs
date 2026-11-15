@@ -29,6 +29,7 @@ namespace PulseDesk
 
             b._contents = Make.Empty("Contents", go.transform, Vector3.zero, Quaternion.identity).transform;
             b._body = Make.Box("Body", b._contents, Vector3.zero, new Vector3(size.x, size.y, 0.008f), Theme.Button);
+            Make.Box("Rim", b._contents, new Vector3(0f, 0f, 0.0007f), new Vector3(size.x + 0.0018f, size.y + 0.0018f, 0.008f), Theme.Rim);
             b._label = Make.Text("Label", b._contents, new Vector3(0f, 0f, -0.0048f),
                 new Vector2(size.x - 0.008f, size.y - 0.004f), fontMm, Theme.TextMain, TextAlignmentOptions.Center);
             b._label.text = label;

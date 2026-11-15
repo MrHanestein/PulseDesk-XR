@@ -28,6 +28,8 @@ namespace PulseDesk
         private bool _focused;
         private int _shownSeconds = -1;
         private bool _shownOverdue;
+        private GameObject _glow;
+        private float _targetScale = 1f;
         private TaskLane _shownLane = (TaskLane)(-1);
 
         public override bool Draggable { get { return true; } }
@@ -48,6 +50,13 @@ namespace PulseDesk
             float z = -(Thickness * 0.5f + 0.0006f);
             v._contents = Make.Empty("Contents", go.transform, Vector3.zero, Quaternion.identity).transform;
             v._body = Make.Box("Body", v._contents, Vector3.zero, new Vector3(Width, Height, Thickness), Theme.CardBody);
+            // A lighter slab a hair larger and just behind gives the card a fine rim, so it reads against the glass.
+            Make.Box("Rim", v._contents, new Vector3(0f, 0f, 0.0007f), new Vector3(Width + 0.0018f, Height + 0.0018f, Thickness), Theme.Rim);
+            // A soft halo in the lane colour behind the running sprint. Shown only in Urgent.
+            v._glow = Make.Box("Glow", v._contents, new Vector3(0f, 0f, 0.0022f), new Vector3(Width + 0.014f, Height + 0.014f, 0.002f),
+                Theme.Glass(0xF2383F, 0.34f)).gameObject;
+            v._glow.SetActive(false);
+            v._contents.localScale = new Vector3(0.55f, 0.55f, 1f);   // grows in when it appears
             // A slim accent bar set inside the rounded edge.
             v._strip = Make.Box("Strip", v._contents, new Vector3(-Width * 0.5f + 0.0065f, 0f, -(Thickness * 0.5f + 0.0004f)),
                 new Vector3(0.004f, Height - 0.022f, 0.0008f), Theme.Next);
@@ -61,8 +70,7 @@ namespace PulseDesk
             v._title.enableWordWrapping = false;
 #endif
             v._title.overflowMode = TextOverflowModes.Truncate;
-            v._title.richText = true;   // the due time is coloured inside the title
-            v._step = Make.Text("Step", v._contents, new Vector3(0.006f, -0.010f, z), new Vector2(0.118f, 0.026f),
+            v._title.richText = true;   // the due time is coloured inside the title            v._step = Make.Text("Step", v._contents, new Vector3(0.006f, -0.010f, z), new Vector2(0.118f, 0.026f),
                 7f, Theme.TextDim, TextAlignmentOptions.TopLeft);
             v._laneLabel = Make.Text("Lane", v._contents, new Vector3(-0.030f, -0.031f, z), new Vector2(0.046f, 0.012f),
                 6.5f, Theme.Next, TextAlignmentOptions.Left);
@@ -95,6 +103,7 @@ namespace PulseDesk
                 Make.SetColor(_strip.sharedMaterial, accent);
                 _laneLabel.color = accent;
                 _laneLabel.text = Theme.Label(_item.lane);
+                _glow.SetActive(_item.lane == TaskLane.Urgent);
             }
             _shownSeconds = -1;
             ApplyLook();
@@ -151,12 +160,19 @@ namespace PulseDesk
             // Hover and focus brighten the fill. No outlines, nothing reflows.
             bool bright = _hovered || Held || _focused;
             Make.SetColor(_body.sharedMaterial, bright ? Theme.CardHover : Theme.CardBody);
-            float s = Held ? 1.06f : (_focused ? 1.03f : 1f);
-            _contents.localScale = new Vector3(s, s, 1f);
+            _targetScale = Held ? 1.06f : (_focused ? 1.03f : 1f);
         }
 
         private void Update()
         {
+            // Size changes ease in place: the grow-in on arrival, and the small lift on focus or grab.
+            float current = _contents.localScale.x;
+            if (Mathf.Abs(current - _targetScale) > 0.0005f)
+            {
+                float s = Mathf.Lerp(current, _targetScale, 1f - Mathf.Exp(-14f * Time.unscaledDeltaTime));
+                _contents.localScale = new Vector3(s, s, 1f);
+            }
+
             if (!Held && _slot != null)
             {
                 float k = 1f - Mathf.Exp(-12f * Time.unscaledDeltaTime);

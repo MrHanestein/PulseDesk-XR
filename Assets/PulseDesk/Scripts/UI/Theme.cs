@@ -12,6 +12,8 @@ namespace PulseDesk
         public static readonly Color CardHover = Hex(0x39424F);
         public static readonly Color Button = Hex(0x2E3644);
         public static readonly Color ButtonHover = Hex(0x47536A);
+        public static readonly Color Rim = Hex(0x465168);
+        public static readonly Color PipOff = Hex(0x2A3140);
         public static readonly Color TextMain = Hex(0xE8EAED);
         public static readonly Color TextDim = Hex(0x9AA0A6);
         public static readonly Color Urgent = Hex(0xF2383F);

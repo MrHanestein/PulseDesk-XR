@@ -52,6 +52,9 @@ namespace PulseDesk
         private string _shownIdle = "";
         private string _shownClear = "";
         private float _nextSlowCheck;
+        private const int PipCount = 10;
+        private Renderer[] _pips;
+        private int _shownPips = -1;
         private TextMeshPro _glance;
         private string _shownGlance = "";
         private Transform _bar;
@@ -128,6 +131,17 @@ namespace PulseDesk
                 lane.badge = Make.Text("Badge", go.transform, new Vector3(0.055f, 0.130f, 0.0272f),
                     new Vector2(0.04f, 0.016f), 7.5f, Theme.TextDim, TextAlignmentOptions.Right);
                 Lanes[i] = lane;
+
+                if (order[i] == TaskLane.Done)
+                {
+                    // One pip lights for each task finished today: the day's progress at a glance.
+                    _pips = new Renderer[PipCount];
+                    for (int p = 0; p < PipCount; p++)
+                    {
+                        float px = (p - (PipCount - 1) * 0.5f) * 0.0145f;
+                        _pips[p] = Make.Box("Pip", go.transform, new Vector3(px, 0.106f, 0.0272f), new Vector3(0.009f, 0.005f, 0.002f), Theme.PipOff);
+                    }
+                }
 
                 if (order[i] == TaskLane.Urgent)
                 {
@@ -278,6 +292,14 @@ namespace PulseDesk
             if (_summary == null || _store == null) return;
             int open = _store.Tasks.Count - _store.CountIn(TaskLane.Done);
             _summary.text = open + " open | " + _store.DoneToday + " done | " + _store.FocusMinutesToday + "m focus";
+
+            int lit = Mathf.Min(PipCount, _store.DoneToday);
+            if (_pips != null && lit != _shownPips)
+            {
+                _shownPips = lit;
+                for (int p = 0; p < _pips.Length; p++)
+                    Make.SetColor(_pips[p].sharedMaterial, p < lit ? Theme.Done : Theme.PipOff);
+            }
         }
 
         private void Update()

@@ -1,111 +1,81 @@
 # PulseDesk XR
 
-A hands-first mixed reality task board for Meta Quest 3 / 3S. Your real desk becomes three lanes — **Urgent**, **Next** and **Done** — and you move task cards between them by grabbing, pinching, thumb-swiping or speaking. No controllers.
+A task board that sits on your real desk. Built for Meta Quest 3 and 3S, used with bare hands.
 
-Entry for the [Meta VR Start Developer Competition 2026](https://start-developer-competition-26.devpost.com/) — **Productivity track, New Experience division**.
+The app puts a small dock in front of you with three lanes called Next, Urgent and Done. Tasks are cards. You pick a card up and drop it in a lane, or pinch it from a distance, or flick your thumb while your hand rests on your leg. A card in Urgent starts a five minute sprint. A card in Done plays a chime and adds to your streak for the day.
 
-> **Deadline: Wed 18 Nov 2026, 12:00 PT = 20:00 GMT.** Our own cut-off is 16:00 GMT. See [PLAN.md](PLAN.md).
+This is my entry for the Meta VR Start Developer Competition 2026, Productivity track, New Experience division. I am building it alone.
 
-## Documents
+## What you can do in it
 
-| File | What it is for |
-| --- | --- |
-| [BUILD_GUIDE.md](BUILD_GUIDE.md) | Step-by-step stops from empty project to submission, with what to verify at each. |
-| [PLAN.md](PLAN.md) | Who does what, day by day, with gates. Start here every morning. |
-| [BLUEPRINT.md](BLUEPRINT.md) | The full build guide: design rules, setup steps, code, links. |
-| [SUBMISSION.md](SUBMISSION.md) | Devpost form drafts, video shot list, final checklist. |
-| [AGENTS.md](AGENTS.md) | Rules the AI coding agent (Antigravity or any other) must follow in this repo. |
-| `docs/HANDOFF.md` | Create this. A running log both of us (and our agents) append to. |
-
-## The core loop (what a judge does in the first two minutes)
-
-1. Puts the headset on while seated. The dock appears on the desk in front of them (no room scan required).
-2. Three starter cards teach the three inputs: grab a card, thumb-swipe a card, pinch a button.
-3. Moves a card to **Urgent** — a 5-minute sprint timer starts. Moves it to **Done** — chime, streak goes up.
-4. Says or picks a goal ("prepare Friday's demo") and gets three small cards back.
-
-## Controls
-
-| Action | Direct | At a distance | Resting hand |
+| Action | Up close | From a distance | Hand at rest |
 | --- | --- | --- | --- |
-| Move a card | Grab it, drop it on a lane | Point (or look, on eye-tracked devices) + pinch-drag | Thumb swipe left = Urgent, right = Done |
-| Change focused card | Touch it | Point / look at it | Thumb swipe forward / backward |
-| Pause / resume sprint | Poke the timer | Pinch the timer | Thumb tap |
-| Break a goal into steps | Poke "Break it down" | Pinch "Break it down" | — (then speak, or pick a preset) |
-| Re-place the dock | Poke "Move dock here" | Pinch it | — |
+| Move a card | Pinch it and carry it to a lane | Point, pinch and drag | Thumb swipe left for Urgent, right for Done |
+| Choose a different card | Touch it | Point at it | Thumb swipe forward or back |
+| Pause or resume the sprint | Poke the timer | Pinch the timer | Thumb tap |
+| Add your own task | Poke "New task" and type | Pinch "New task" | |
+| Split a goal into three steps | Poke "Break it down" | Pinch "Break it down" | |
+| Put the dock somewhere else | Poke "Move dock here" | Pinch it | |
 
-Quest 3 and 3S have no eye tracking, so "look" becomes "point with the hand ray" there. That switch is automatic (see BLUEPRINT §4).
+No controller is needed at any point. Typing uses the headset's own keyboard, which works with hands and without internet.
 
-## Requirements
+## How it finds your desk
 
-- **Unity 6**, `6000.0.66f2` or later. We both use the *exact same* editor version: `6000.6.9f1` (Unity 6.6; and keep `ProjectSettings/ProjectVersion.txt` committed).
-- **Meta XR All-in-One SDK**, latest release (Interaction SDK v207 or newer is needed for gaze).
-- **Node.js 18+** and the **Meta VR CLI** (`metavr`).
-- **Git** with **Git LFS**.
-- A Quest 3 or 3S in developer mode for device testing. Without one, use Meta XR Simulator.
+The app tries three things in order and always ends with a dock you can reach.
 
-No particular PC is required. Nothing in the shipped app depends on a local AI server.
+1. If you have scanned your room, it looks for a table in the scan.
+2. If not, it reads the headset's live depth data and looks for a flat surface below eye level.
+3. If that fails too, it places the dock half a metre in front of you at lap height.
 
-## Getting started
+## Running it
 
-```bash
-# 1. Clone
-git lfs install
-git clone <REPO_URL> pulsedesk-xr
-cd pulsedesk-xr
+You need Unity 6000.6.9f1 with Android Build Support, and the Meta XR All-in-One SDK 209 added to your Unity account.
 
-# 2. Meta VR CLI (pick one)
-npx metavr@latest --version                                  # no install
-# Windows:  iwr -useb https://developers.meta.com/horizon/install-cli/windows/ | iex
-# mac/Linux: curl -fsSL https://developers.meta.com/horizon/install-cli/ | sh
+1. Open this folder in Unity Hub.
+2. Open `Assets/PulseDesk/Scenes/Dev_B.unity` and press Play to try it with a mouse and keyboard. Drag cards with the mouse. The arrow keys move the highlighted card, Space pauses, B opens the goal picker, R moves the dock.
+3. Open `Assets/PulseDesk/Scenes/Main.unity` for the headset version.
 
-metavr doctor          # lists what dev software is present / missing
-metavr init            # guided setup: skills, MCP server, optional sign-in
+To build the APK, use the menu PulseDesk, then "4. Build APK". The file lands in `Builds/PulseDeskXR.apk`. The release keystore is kept outside this repository in a folder called `PulseDeskKeys` in the user profile.
+
+With the Unity editor closed, the same steps run from a terminal.
+
+```
+powershell -File tools\unity.ps1 -Tests
+powershell -File tools\unity.ps1 -Method PulseDesk.EditorTools.PulseDeskAutomation.PlaySmoke -Name smoke
+powershell -File tools\unity.ps1 -Method PulseDesk.EditorTools.PulseDeskAutomation.Build -Name build
 ```
 
-3. Open the folder in Unity Hub with the pinned editor version. Let it import (first import is slow).
-4. Open **Meta > Tools > Project Setup Tool** and apply every fix.
-5. Open `Assets/PulseDesk/Scenes/Main.unity` (integration scene) or your own `Dev_<Name>.unity`.
-6. Press Play with Meta XR Simulator, or **Build And Run** to a connected headset.
-
-## Repo layout
+## Where things are
 
 ```
 Assets/PulseDesk/
-  Scripts/
-    Core/         TaskStore, TaskModels, GoalDecomposer   (no Meta SDK; own assembly, unit-tested)
-    App/          PulseDeskApp (the one scene component), AudioFeedback
-    Interaction/  HandInteractor, PinchTarget, PointerSource
-    Input/        Meta hand tracking, microgestures, mouse/keyboard for Editor testing
-    Spatial/      DockPlacer and the table finders (room scan, depth)
-    UI/           DockView, DockLane, DockButton, TaskCardView, CardManager, Theme, Make
-  Editor/         PulseDesk menu: setup, feature switches, build
-  Tests/Editor/   TaskStore tests (Window > General > Test Runner)
-  Resources/      PulseDeskSurface.mat (created by the menu)
-docs/             HANDOFF.md
+  Scripts/Core         tasks, saving, streak, sprint timer, goal splitting (unit tested)
+  Scripts/App          the one scene component, sounds, typed text
+  Scripts/Interaction  pinch, ray and poke handling
+  Scripts/Input        Meta hand tracking, thumb gestures, mouse and keyboard
+  Scripts/Spatial      dock placement and the two table finders
+  Scripts/UI           dock, lanes, buttons and cards, all built from code
+  Editor               the PulseDesk menu and command line entry points
+  Tests/Editor         unit tests
+tools/unity.ps1        runs Unity without opening the editor
 ```
 
-The dock, cards and buttons are built from code at runtime, so there are no prefabs to wire or merge. The scene holds only Meta's building blocks and one `PulseDesk` object. See [BUILD_GUIDE.md](BUILD_GUIDE.md).
+There are no prefabs. The scene holds Meta's camera rig, passthrough, hand tracking and MR Utility Kit blocks, plus one object named PulseDesk that builds everything else when the app starts.
 
-## Building for submission
+## Other documents
 
-- Scripting backend **IL2CPP**, architecture **ARM64** only.
-- Signed with our release keystore (not the debug key). Keystore lives outside the repo.
-- Uploaded to a release channel named exactly **`Competition`**; the channel's Invite URL goes on the Devpost form.
+| File | What it is |
+| --- | --- |
+| [PLAN.md](PLAN.md) | What is left to do before the deadline |
+| [SUBMISSION.md](SUBMISSION.md) | Text for the Devpost form, the video shot list and the final checks |
+| [docs/HANDOFF.md](docs/HANDOFF.md) | Log of what was done and what is still untested |
+| [BUILD_GUIDE.md](BUILD_GUIDE.md), [BLUEPRINT.md](BLUEPRINT.md), [MASTERCLASS.md](MASTERCLASS.md), [AGENTS.md](AGENTS.md) | Earlier planning notes, written when this was a two person project. Kept for reference. PLAN.md replaces their schedules. |
 
-Full steps: BLUEPRINT §12 and SUBMISSION.md.
-
-## Team
-
-| | Name | Role | Hardware |
-| --- | --- | --- | --- |
-| A | `________` | Spatial, interaction, device builds, release channel. Team Representative. | Desktop + Quest |
-| B | `________` | Task logic, UI, audio, onboarding, video, Devpost write-up. | Any machine; XR Simulator |
-
-## Third-party assets
-
-List every asset, font, sound and package here with its licence as it is added. The rules require that we are authorised to use everything in the build, and forbid brand names, logos and identifiable people other than us.
+## Third party assets
 
 | Asset | Source | Licence |
 | --- | --- | --- |
-| | | |
+| Meta XR All-in-One SDK 209 | Meta | Meta SDK licence |
+| TextMesh Pro and the Liberation Sans font | Unity package | Unity Companion Licence, SIL Open Font Licence |
+
+All sounds are generated in code. There are no other fonts, images, models or audio files.

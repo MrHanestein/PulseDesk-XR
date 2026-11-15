@@ -29,11 +29,11 @@ namespace PulseDesk
         private bool _shownPaused;
         private string _shownIdle = "";
 
-        public static DockView Build(Transform root, TaskStore store, Action onRecenter, Action<string> onGoal)
+        public static DockView Build(Transform root, TaskStore store, Action onRecenter, Action<string> onGoal, Action onNewTask)
         {
             DockView v = root.gameObject.AddComponent<DockView>();
             v._store = store;
-            v.BuildAll(root, onRecenter, onGoal);
+            v.BuildAll(root, onRecenter, onGoal, onNewTask);
             store.StatsChanged += v.RefreshStreak;
             v.RefreshStreak();
             return v;
@@ -51,7 +51,7 @@ namespace PulseDesk
             return Lanes[0];
         }
 
-        private void BuildAll(Transform root, Action onRecenter, Action<string> onGoal)
+        private void BuildAll(Transform root, Action onRecenter, Action<string> onGoal, Action onNewTask)
         {
             Make.Box("Plate", root, new Vector3(0f, 0.004f, 0.03f), new Vector3(0.58f, 0.008f, 0.27f), Theme.Plate);
 
@@ -88,18 +88,21 @@ namespace PulseDesk
 
             // Banner and streak along the back edge. Status lives on the dock, never head-locked.
             Transform top = Make.Empty("Top", root, new Vector3(0f, 0.05f, 0f), Lean).transform;
-            Make.Box("BannerBack", top, new Vector3(0f, 0.170f, 0.03f), new Vector3(0.545f, 0.03f, 0.004f), Theme.Panel);
-            _banner = Make.Text("Banner", top, new Vector3(-0.065f, 0.170f, 0.0272f), new Vector2(0.39f, 0.024f),
-                7.5f, Theme.TextMain, TextAlignmentOptions.Left);
-            _streak = Make.Text("Streak", top, new Vector3(0.20f, 0.170f, 0.0272f), new Vector2(0.13f, 0.024f),
-                6.5f, Theme.Done, TextAlignmentOptions.Right);
+            // The banner is the main guidance line, so it is sized to be read at arm's length.
+            Make.Box("BannerBack", top, new Vector3(0f, 0.174f, 0.03f), new Vector3(0.545f, 0.038f, 0.004f), Theme.Panel);
+            _banner = Make.Text("Banner", top, new Vector3(-0.07f, 0.174f, 0.0272f), new Vector2(0.38f, 0.032f),
+                10f, Theme.TextMain, TextAlignmentOptions.Left);
+            _streak = Make.Text("Streak", top, new Vector3(0.195f, 0.174f, 0.0272f), new Vector2(0.14f, 0.032f),
+                8f, Theme.Done, TextAlignmentOptions.Right);
 
             // One row of buttons at the front edge. Never a grid.
             Transform row = Make.Empty("Buttons", root, new Vector3(0f, 0.024f, -0.085f), ButtonLean).transform;
             _mainRow = Make.Empty("Main", row, Vector3.zero, Quaternion.identity);
-            BreakDownButton = DockButton.Create("BreakDown", _mainRow.transform, new Vector3(-0.09f, 0f, 0f),
+            DockButton.Create("NewTask", _mainRow.transform, new Vector3(-0.175f, 0f, 0f),
+                new Vector2(0.16f, 0.04f), "New task", 8f, onNewTask);
+            BreakDownButton = DockButton.Create("BreakDown", _mainRow.transform, new Vector3(0f, 0f, 0f),
                 new Vector2(0.16f, 0.04f), "Break it down", 8f, OpenPicker);
-            DockButton.Create("MoveDock", _mainRow.transform, new Vector3(0.09f, 0f, 0f),
+            DockButton.Create("MoveDock", _mainRow.transform, new Vector3(0.175f, 0f, 0f),
                 new Vector2(0.16f, 0.04f), "Move dock here", 8f, onRecenter);
 
             _pickerRow = Make.Empty("Picker", row, Vector3.zero, Quaternion.identity);
@@ -192,7 +195,7 @@ namespace PulseDesk
             if (Time.unscaledTime > _bannerUntil)
             {
                 string idle;
-                if (_store.Tasks.Count == _store.CountIn(TaskLane.Done)) idle = "Pinch \"Break it down\" to add tasks";
+                if (_store.Tasks.Count == _store.CountIn(TaskLane.Done)) idle = "Pinch \"New task\" to add your own";
                 else if (sprint == null) idle = "Drag a card to URGENT to start a sprint";
                 else if (paused) idle = "Paused. Pinch the timer to resume";
                 else idle = "Sprint: " + sprint.title;

@@ -21,6 +21,7 @@ namespace PulseDesk
         private DockView _dock;
         private CardManager _cards;
         private Transform _head;
+        private TextEntry _text;
 
         private void Awake()
         {
@@ -29,6 +30,7 @@ namespace PulseDesk
             if (Store == null) Store = gameObject.AddComponent<TaskStore>();
             _sfx = gameObject.AddComponent<AudioFeedback>();
             _placer = gameObject.AddComponent<DockPlacer>();
+            _text = gameObject.AddComponent<TextEntry>();
 
             _interactor = gameObject.AddComponent<HandInteractor>();
             _interactor.AddSource(gameObject.AddComponent<MousePointerSource>());
@@ -92,7 +94,7 @@ namespace PulseDesk
         {
             if (_dock == null)
             {
-                _dock = DockView.Build(dockRoot, Store, Recenter, SubmitGoal);
+                _dock = DockView.Build(dockRoot, Store, Recenter, SubmitGoal, NewTask);
                 _cards = gameObject.AddComponent<CardManager>();
                 _cards.Init(Store, _dock);
                 if (Store.OnboardingDone) _dock.ShowBanner("Welcome back", false);
@@ -125,6 +127,47 @@ namespace PulseDesk
                 return;
             }
             StartCoroutine(AddSteps(goal, steps));
+        }
+
+        /// <summary>"New task": type one task with the system keyboard (hands only, works offline).</summary>
+        public void NewTask()
+        {
+            if (_dock == null || _text.Active) return;
+            bool started = _text.Begin("Type a task",
+                typed => _dock.ShowBanner("New task: " + typed + "_", false),
+                AddTask,
+                () => _dock.ShowBanner("Nothing added", false));
+            if (started)
+            {
+                _dock.ShowBanner("Type a task, then confirm", false);
+            }
+            else
+            {
+                // No keyboard on this device: never a dead end.
+                _dock.OpenPicker();
+                _dock.ShowBanner("No keyboard here. Pick a goal instead", false);
+            }
+        }
+
+        /// <summary>Adds what the user typed. "A then B" or "A; B" becomes several cards.</summary>
+        public void AddTask(string text)
+        {
+            text = (text ?? "").Trim();
+            if (text.Length == 0) return;
+            if (text.Contains(" then ") || text.Contains(";"))
+            {
+                SubmitGoal(text);
+                return;
+            }
+            // Card titles stay short enough to read at a glance; the full text goes underneath.
+            string title = text.Length > 40 ? text.Substring(0, 39).TrimEnd() + "." : text;
+            if (_cards != null && _dock != null && _dock.BreakDownButton != null)
+                _cards.SpawnPoint = _dock.BreakDownButton.transform.position;
+            Store.Add(char.ToUpper(title[0]) + title.Substring(1), text.Length > 40 ? text : "");
+            if (_cards != null) _cards.SpawnPoint = null;
+            _sfx.Tick();
+            if (_dock != null) _dock.ShowBanner("Added to NEXT: " + title, false);
+            CheckOnboarding();
         }
 
         private IEnumerator AddSteps(string goal, List<string> steps)
@@ -183,6 +226,7 @@ namespace PulseDesk
         private void Update()
         {
             if (!Application.isEditor) return;
+            if (_text != null && _text.Active) return;   // typing a task: letters are not shortcuts
             if (DeskInput.KeyDown(DeskKey.Left)) Store.MoveFocused(TaskLane.Urgent);
             if (DeskInput.KeyDown(DeskKey.Right)) Store.MoveFocused(TaskLane.Done);
             if (DeskInput.KeyDown(DeskKey.Up)) Store.CycleFocus(-1);

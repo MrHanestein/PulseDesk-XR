@@ -193,6 +193,7 @@ namespace PulseDesk.EditorTools
             SetInt(so, "sceneSupport", 1);                   // Supported, never Required
             SetInt(so, "_insightPassthroughSupport", 1);     // Supported
             SetBool(so, "insightPassthroughEnabled", true);
+            SetBool(so, "requiresSystemKeyboard", true);     // "New task" opens the system keyboard
             so.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(cfg);
         }
@@ -275,6 +276,7 @@ namespace PulseDesk.EditorTools
             Run(() =>
             {
                 bool signed = ApplySigning();
+                ConfigureOculusProject();
                 FixAll();
                 FixOpenXR();
                 AssetDatabase.SaveAssets();
@@ -339,8 +341,10 @@ namespace PulseDesk.EditorTools
                           + " lanes=" + UnityEngine.Object.FindObjectsByType<DockLane>(FindObjectsInactive.Exclude).Length
                           + " cards=" + cards + " tasks=" + (app != null ? app.Store.Tasks.Count : -1));
                 if (app == null || dock == null || cards != 3) _smokeErrors++;
+                Shot("shot-1-start");
                 if (app != null)
                 {
+                    app.AddTask("Email the landlord about the boiler");
                     TaskItem sprint = app.Store.ActiveSprint();
                     if (sprint != null) app.Store.Move(sprint.id, TaskLane.Done);
                     app.SubmitGoal("Plan my day");
@@ -356,11 +360,50 @@ namespace PulseDesk.EditorTools
                 foreach (TaskItem item in app.Store.Tasks) if (item.lane == TaskLane.Done) done++;
                 Debug.Log("PulseDesk smoke: after actions cards=" + cards + " tasks=" + app.Store.Tasks.Count
                           + " done=" + done + " doneToday=" + app.Store.DoneToday + " errors=" + _smokeErrors);
-                if (cards != app.Store.Tasks.Count || done != 1 || app.Store.Tasks.Count < 5) _smokeErrors++;
+                if (cards != app.Store.Tasks.Count || done != 1 || app.Store.Tasks.Count != 7) _smokeErrors++;
+                Shot("shot-2-after");
                 SessionState.SetBool(SmokeKey, false);
                 PulseDeskMenu.ResetSave();
                 Debug.Log("PulseDesk smoke: " + (_smokeErrors == 0 ? "PASS" : "FAIL"));
                 EditorApplication.Exit(_smokeErrors == 0 ? 0 : 1);
+            }
+        }
+
+        /// <summary>Saves what the main camera sees to Logs/name.png, so a headless run can be looked at.</summary>
+        private static void Shot(string name)
+        {
+            try
+            {
+                Camera cam = Camera.main;
+                if (cam == null) return;
+                RenderTexture rt = new RenderTexture(1600, 900, 24);
+                RenderTexture before = cam.targetTexture;
+                cam.targetTexture = rt;
+                // Look from where a seated person's eyes would be: about 35 cm above and 50 cm back.
+                GameObject dock = GameObject.Find("DeskDock");
+                Vector3 oldPos = cam.transform.position;
+                Quaternion oldRot = cam.transform.rotation;
+                if (dock != null)
+                {
+                    Transform d = dock.transform;
+                    cam.transform.position = d.position - d.forward * 0.50f + Vector3.up * 0.35f;
+                    cam.transform.LookAt(d.position + Vector3.up * 0.07f);
+                }
+                cam.Render();
+                cam.transform.SetPositionAndRotation(oldPos, oldRot);
+                RenderTexture.active = rt;
+                Texture2D tex = new Texture2D(1600, 900, TextureFormat.RGB24, false);
+                tex.ReadPixels(new Rect(0, 0, 1600, 900), 0, 0);
+                tex.Apply();
+                cam.targetTexture = before;
+                RenderTexture.active = null;
+                File.WriteAllBytes("Logs/" + name + ".png", tex.EncodeToPNG());
+                UnityEngine.Object.DestroyImmediate(tex);
+                rt.Release();
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("PulseDesk: screenshot failed: " + e.Message);
             }
         }
 

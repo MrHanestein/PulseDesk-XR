@@ -52,6 +52,13 @@ namespace PulseDesk
 
             v._title = Make.Text("Title", v._contents, new Vector3(0.006f, 0.021f, z), new Vector2(0.118f, 0.032f),
                 8.5f, Theme.TextMain, TextAlignmentOptions.TopLeft);
+            // One line only: stacked cards show just their title strip, so a wrapped title would be cut in half.
+#if UNITY_6000_0_OR_NEWER
+            v._title.textWrappingMode = TextWrappingModes.NoWrap;
+#else
+            v._title.enableWordWrapping = false;
+#endif
+            v._title.overflowMode = TextOverflowModes.Truncate;
             v._step = Make.Text("Step", v._contents, new Vector3(0.006f, -0.010f, z), new Vector2(0.118f, 0.026f),
                 6f, Theme.TextDim, TextAlignmentOptions.TopLeft);
             v._laneLabel = Make.Text("Lane", v._contents, new Vector3(-0.025f, -0.032f, z), new Vector2(0.056f, 0.010f),

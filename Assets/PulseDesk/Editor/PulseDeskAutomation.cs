@@ -282,9 +282,16 @@ namespace PulseDesk.EditorTools
                 FixAll();
                 FixOpenXR();
                 AssetDatabase.SaveAssets();
-                PulseDeskMenu.BuildAndroid();
-                bool ok = File.Exists("Builds/PulseDeskXR.apk")
-                          && (DateTime.Now - File.GetLastWriteTime("Builds/PulseDeskXR.apk")).TotalMinutes < 5;
+                // Unity's IL2CPP step fails now and then on this editor version for no reason in our code,
+                // and passes on the next try. So try up to three times.
+                bool ok = false;
+                for (int attempt = 1; attempt <= 3 && !ok; attempt++)
+                {
+                    DateTime started = DateTime.Now;
+                    PulseDeskMenu.BuildAndroid();
+                    ok = File.Exists("Builds/PulseDeskXR.apk") && File.GetLastWriteTime("Builds/PulseDeskXR.apk") >= started;
+                    if (!ok) Debug.LogWarning("PulseDesk: build attempt " + attempt + " failed" + (attempt < 3 ? ", trying again." : "."));
+                }
                 Debug.Log("PulseDesk: build finished, apk=" + ok + ", releaseSigned=" + signed);
                 Finish(ok ? 0 : 1);
             });

@@ -7,7 +7,7 @@ namespace PulseDesk
     /// <summary>
     /// Touch controllers, for people who prefer them. Each controller is a pointer: the ray comes out
     /// of the controller and the trigger is the pinch, so every card and button works the same way.
-    /// Buttons: A finishes the sprint (or starts the next card), B speaks a task,
+    /// Buttons: A finishes the sprint (or starts the next card), B switches compact mode,
     /// X types a task, Y pauses. A short buzz confirms each press. Hands stay the primary input.
     /// </summary>
     public class OvrControllers : PointerSource
@@ -89,7 +89,7 @@ namespace PulseDesk
                 if (app.Store.ActiveSprint() != null) app.Store.CompleteSprint();
                 else app.Store.StartNext();
             }
-            if (OVRInput.GetDown(OVRInput.Button.Two, OVRInput.Controller.RTouch)) { Buzz(1); app.Speak(); }
+            if (OVRInput.GetDown(OVRInput.Button.Two, OVRInput.Controller.RTouch)) { Buzz(1); app.ToggleCompact(); }
             if (OVRInput.GetDown(OVRInput.Button.One, OVRInput.Controller.LTouch)) { Buzz(0); app.NewTask(); }
             if (OVRInput.GetDown(OVRInput.Button.Two, OVRInput.Controller.LTouch)) { Buzz(0); app.Store.ToggleUserPause(); }
         }

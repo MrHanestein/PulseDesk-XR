@@ -112,6 +112,7 @@ namespace PulseDesk
                 _cards = gameObject.AddComponent<CardManager>();
                 _cards.Init(Store, _dock);
                 _dock.CompactChanged += _cards.Relayout;
+                _dock.SetSpeakAvailable(_speech.Available);
                 if (Store.OnboardingDone) _dock.ShowBanner(WelcomeBack(), false);
                 else _dock.ShowBanner("No controllers needed. Pinch a card to pick it up", false);
             }
@@ -265,6 +266,11 @@ namespace PulseDesk
         }
 
         public bool IsListening { get { return _speech != null && _speech.Listening; } }
+
+        public void ToggleCompact()
+        {
+            if (_dock != null && !_dock.Typing) _dock.SetCompact(!_dock.Compact);
+        }
 
         /// <summary>"New task": opens the keyboard on the dock. Hands only, works offline.</summary>
         public void NewTask()

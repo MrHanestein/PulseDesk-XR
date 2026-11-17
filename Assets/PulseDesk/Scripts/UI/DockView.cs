@@ -188,6 +188,7 @@ namespace PulseDesk
             {
                 DockButton b = DockButton.Create("Main_" + i, _mainRow.transform, new Vector3(RowX(i, labels.Length, 0.09f, 0.005f), 0f, 0f),
                     new Vector2(0.09f, 0.04f), labels[i], 7.5f, presses[i]);
+                _mainButtons[i] = b;
                 if (i == 0) { _speakButton = b; b.SetLabelColor(Theme.Next); }
                 if (i == 2) RoutinesButton = b;
                 if (i == 3) ClearButton = b;
@@ -336,6 +337,25 @@ namespace PulseDesk
         private int _shownDim = -1;
         private DockButton _speakButton;
         private int _shownListening = -1;
+        private readonly DockButton[] _mainButtons = new DockButton[6];
+
+        /// <summary>
+        /// Shows the Speak button only where speech recognition can be used. On Quest the system speech
+        /// service is not open to other apps, so there it is hidden and the other buttons close the gap.
+        /// </summary>
+        public void SetSpeakAvailable(bool available)
+        {
+            _speakButton.gameObject.SetActive(available);
+            int count = available ? _mainButtons.Length : _mainButtons.Length - 1;
+            float width = available ? 0.09f : 0.105f;
+            int slot = 0;
+            for (int i = 0; i < _mainButtons.Length; i++)
+            {
+                if (!_mainButtons[i].gameObject.activeSelf) continue;
+                _mainButtons[i].transform.localPosition = new Vector3(RowX(slot, count, width, 0.006f), 0f, 0f);
+                slot++;
+            }
+        }
 
         private void ToggleDim()
         {

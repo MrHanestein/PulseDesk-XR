@@ -275,7 +275,8 @@ namespace PulseDesk
         /// <summary>"New task": opens the keyboard on the dock. Hands only, works offline.</summary>
         public void NewTask()
         {
-            if (_dock == null || _dock.Typing) return;
+            // OpenKeyboard decides: a second press while the Meta keyboard is pending opens the dock keyboard.
+            if (_dock == null) return;
             _dock.OpenKeyboard(AddTask);
         }
 

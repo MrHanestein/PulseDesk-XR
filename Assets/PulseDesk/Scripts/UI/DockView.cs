@@ -229,7 +229,20 @@ namespace PulseDesk
         /// </summary>
         public void OpenKeyboard(Action<string> done)
         {
-            if (Typing) return;
+            if (Keyboard != null && Keyboard.Open) return;
+            // Type pressed again while the Meta keyboard is meant to be open: it did not show up, or it
+            // closed without telling us. Drop it and open the dock keyboard, so a press always gives a keyboard.
+            if (_system != null)
+            {
+                Debug.Log("PulseDesk: Type pressed again, switching to the dock keyboard");
+                try { _system.active = false; } catch (Exception) { }
+                _system = null;
+                _shownTyped = null;
+                _bannerUntil = 0f;
+                _onTyped = done;
+                OpenDockKeyboard();
+                return;
+            }
             if (Compact) SetCompact(false);
             ClosePicker();
             _onTyped = done;
@@ -279,7 +292,7 @@ namespace PulseDesk
                 {
                     _shownTyped = typed;
                     _banner.color = Theme.TextMain;
-                    _banner.text = typed.Length == 0 ? "Meta keyboard open. Type your task" : "New task: " + typed + "_";
+                    _banner.text = typed.Length == 0 ? "Type your task. No keyboard? Press Type again" : "New task: " + typed + "_";
                 }
                 return;
             }

@@ -19,7 +19,21 @@ namespace PulseDesk
             public Transform indexTip;
             public Transform thumbTip;
             public bool left;
+            // Smoothed ray and pinch state, so the ray does not shake and a pinch does not flicker.
+            public bool rayInit;
+            public Vector3 rayOrigin;
+            public Vector3 rayDir;
+            public bool pinching;
+            public int frame = -1;
+            public PointerState cached;
         }
+
+        // Pinch starts when the SDK reports a pinch and only ends when the fingers clearly open.
+        private const float PinchHold = 0.55f;
+        // Ray smoothing: fast while aiming, much slower while the fingers close, so pinching
+        // does not drag the ray off the key you were aiming at.
+        private const float FollowAiming = 22f;
+        private const float FollowPinching = 6f;
 
         private readonly List<Hand> _hands = new List<Hand>();
         private Transform _trackingSpace;
@@ -77,11 +91,22 @@ namespace PulseDesk
                 h = c;
                 break;
             }
-            if (h == null) return s;
+            if (h == null)
+            {
+                for (int i = 0; i < _hands.Count; i++)
+                    if (_hands[i].left == wantLeft) { _hands[i].rayInit = false; _hands[i].pinching = false; }
+                return s;
+            }
+            if (h.frame == Time.frameCount) return h.cached;   // one update per frame
+            h.frame = Time.frameCount;
 
             s.valid = true;
             // The palm-up pinch that opens the system menu is not a pinch for the app.
-            s.pinching = !h.hand.IsSystemGestureInProgress && h.hand.GetFingerIsPinching(OVRHand.HandFinger.Index);
+            float strength = h.hand.GetFingerPinchStrength(OVRHand.HandFinger.Index);
+            if (h.hand.IsSystemGestureInProgress) h.pinching = false;
+            else if (!h.pinching) h.pinching = h.hand.GetFingerIsPinching(OVRHand.HandFinger.Index);
+            else h.pinching = strength >= PinchHold || h.hand.GetFingerIsPinching(OVRHand.HandFinger.Index);
+            s.pinching = h.pinching;
 
             CacheTips(h);
             if (h.indexTip != null && h.thumbTip != null)
@@ -108,9 +133,27 @@ namespace PulseDesk
                     origin = pose.position;
                     direction = pose.forward;
                 }
+                if (!h.rayInit)
+                {
+                    h.rayInit = true;
+                    h.rayOrigin = origin;
+                    h.rayDir = direction.normalized;
+                }
+                else
+                {
+                    float follow = (h.pinching || strength > 0.25f) ? FollowPinching : FollowAiming;
+                    float t = 1f - Mathf.Exp(-follow * Time.unscaledDeltaTime);
+                    h.rayOrigin = Vector3.Lerp(h.rayOrigin, origin, t);
+                    h.rayDir = Vector3.Slerp(h.rayDir, direction.normalized, t).normalized;
+                }
                 s.rayValid = true;
-                s.ray = new Ray(origin, direction);
+                s.ray = new Ray(h.rayOrigin, h.rayDir);
             }
+            else
+            {
+                h.rayInit = false;
+            }
+            h.cached = s;
             return s;
         }
 

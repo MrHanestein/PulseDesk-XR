@@ -82,6 +82,10 @@ namespace PulseDesk
         {
             DockButton b = DockButton.Create(name, transform, new Vector3(x, y, 0f), new Vector2(width, KeyH), label, font, press);
             b.Debounce = 0.12f;   // a typed double letter must not be swallowed
+            // The hit area fills the gaps between keys, so a ray sliding across the keyboard
+            // always lands on a key and never blinks out between two of them.
+            BoxCollider col = b.GetComponent<BoxCollider>();
+            if (col != null) col.size = new Vector3(width + Gap, KeyH + 0.004f, col.size.z);
             return b;
         }
 

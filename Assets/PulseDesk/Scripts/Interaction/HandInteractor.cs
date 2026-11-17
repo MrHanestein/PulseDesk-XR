@@ -11,12 +11,19 @@ namespace PulseDesk
     {
         private const float NearRadius = 0.03f;
         private const float PokeRadius = 0.008f;
-        private const float RayRadius = 0.01f;
+        private const float PokeRelease = 0.02f;   // the tip must move this far away before the same key fires again
+        private const float RayRadius = 0.012f;
         private const float RayLength = 1.2f;
+        private const float IdleRayLength = 0.3f;  // ray shown when it points at nothing, so it never blinks out
+        private const float HoverGrace = 0.15f;    // keep a hover through a short tracking wobble
+        private const float AimMemory = 0.1f;    // a pinch counts for what was aimed at just before it
 
         private class Pointer
         {
             public PinchTarget hover;
+            public float hoverSeen;
+            public PinchTarget previousHover;
+            public float hoverChanged;
             public PinchTarget grabbed;
             public PinchTarget poked;
             public bool wasPinching;
@@ -120,10 +127,43 @@ namespace PulseDesk
                 if (target == null && s.rayValid)
                 {
                     target = FindFar(s.ray, out distance, out point);
-                    if (target != null) { showRay = true; rayEnd = point; }
+                    showRay = true;
+                    if (target != null)
+                    {
+                        rayEnd = point;
+                        p.distance = distance;
+                        p.hoverSeen = Time.unscaledTime;
+                    }
+                    else if (p.hover != null && p.hover.isActiveAndEnabled && p.distance > 0f
+                             && Time.unscaledTime - p.hoverSeen < HoverGrace)
+                    {
+                        // A frame or two of tracking wobble must not drop the key under the ray.
+                        target = p.hover;
+                        distance = p.distance;
+                        point = s.ray.GetPoint(distance);
+                        rayEnd = point;
+                    }
+                    else
+                    {
+                        rayEnd = s.ray.GetPoint(IdleRayLength);
+                    }
+                }
+                else if (near)
+                {
+                    p.distance = 0f;
+                    p.hoverSeen = Time.unscaledTime;
                 }
 
                 SetHover(p, target);
+
+                // Closing the fingers moves the hand a little. If the ray slid onto another key in the
+                // last moment, press the one that was aimed at.
+                if (pinchDown && !near && p.previousHover != null && p.previousHover.isActiveAndEnabled
+                    && Time.unscaledTime - p.hoverChanged < AimMemory)
+                {
+                    target = p.previousHover;
+                    SetHover(p, target);
+                }
 
                 if (pinchDown && target != null && !target.Held)
                 {
@@ -145,11 +185,17 @@ namespace PulseDesk
                 // Fingertip poke: fires once when the tip enters a non-draggable target.
                 if (s.pokeValid)
                 {
-                    PinchTarget poke = FindNear(s.pokeTip, PokeRadius);
-                    if (poke != p.poked)
+                    // Fires when the tip touches a key, and is ready again only after the tip has
+                    // clearly left it, so a finger resting on a key does not type it twice.
+                    if (p.poked != null && FindNear(s.pokeTip, PokeRelease) != p.poked) p.poked = null;
+                    if (p.poked == null)
                     {
-                        p.poked = poke;
-                        if (poke != null && !poke.Draggable) poke.OnPress();
+                        PinchTarget poke = FindNear(s.pokeTip, PokeRadius);
+                        if (poke != null)
+                        {
+                            p.poked = poke;
+                            if (!poke.Draggable) poke.OnPress();
+                        }
                     }
                 }
                 else
@@ -170,6 +216,11 @@ namespace PulseDesk
         {
             if (p.hover == target) return;
             if (p.hover != null) p.hover.RemoveHover();
+            if (p.hover != null)
+            {
+                p.previousHover = p.hover;
+                p.hoverChanged = Time.unscaledTime;
+            }
             p.hover = target;
             if (target != null) target.AddHover();
         }

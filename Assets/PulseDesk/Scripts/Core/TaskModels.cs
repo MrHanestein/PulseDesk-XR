@@ -33,5 +33,6 @@ namespace PulseDesk
         public float defaultMinutes = 5f;
         public float focusSecondsToday;
         public string focusDate = "";
+        public bool focusDim = true;
     }
 }

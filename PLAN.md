@@ -16,7 +16,7 @@ Not checked yet, because it needs the headset
 
 - Passthrough, pinch, pointing and poking with real hands
 - Thumb gestures
-- The system keyboard for "New task"
+- The dock keyboard for "New task"
 - Dock placement on a real desk, in a scanned and an unscanned room
 - Text size, frame rate and field of view
 
@@ -49,8 +49,10 @@ Put the controllers in another room first.
 - [ ] Open the system menu with the palm-up pinch. No card is grabbed by that pinch
 - [ ] Poke "Compact". Only the banner and the sprint remain. Poke "Expand" to bring the board back
 - [ ] In compact mode let a 1 minute sprint run out. The timer pulses in the last minute and the full board returns at zero
-- [ ] Poke "New task". The system keyboard opens. Type a task and confirm. A card arrives in Next
-- [ ] In the keyboard, use the microphone key to dictate "call the bank in 6 minutes". The card shows a due time
+- [ ] Poke "New task". The Meta keyboard opens. Type a task and press Done. A card arrives in Next
+- [ ] If the Meta keyboard has a microphone key, try speaking a task with it. Note whether it works
+- [ ] Start a sprint. The room fades to grey within two seconds. Pause it and the colour returns. Poke "Dim: on" to turn it off
+- [ ] Type "call bank" and poke the "in 15 min" key, then Add. The card shows a due time
 - [ ] One minute later a soft tone plays and the banner says "In 5 minutes". At the due time a louder alert plays
 - [ ] With nothing running, poke minus and plus. The length on the "Start" button changes
 - [ ] Let a 1 minute sprint run out. The alert is easy to hear and the banner turns red

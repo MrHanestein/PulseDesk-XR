@@ -30,6 +30,8 @@ namespace PulseDesk
         public DockButton RoutinesButton { get; private set; }
         public DockButton ClearButton { get; private set; }
         public bool Compact { get; private set; }
+        public KeyboardView Keyboard { get; private set; }
+        public bool Typing { get { return (Keyboard != null && Keyboard.Open) || _system != null; } }
 
         /// <summary>Raised after compact mode changes, so cards can be laid out again.</summary>
         public event Action CompactChanged;
@@ -178,14 +180,15 @@ namespace PulseDesk
             Transform row = _rows.transform;
 
             _mainRow = Make.Empty("Main", row, Vector3.zero, Quaternion.identity);
-            string[] labels = { "New task", "Routines", "Clear", "Move dock" };
-            Action[] presses = { _actions.newTask, OpenPicker, _actions.clearOrUndo, _actions.recenter };
+            string[] labels = { "New task", "Routines", "Clear", "Dim: on", "Move dock" };
+            Action[] presses = { _actions.newTask, OpenPicker, _actions.clearOrUndo, ToggleDim, _actions.recenter };
             for (int i = 0; i < labels.Length; i++)
             {
-                DockButton b = DockButton.Create("Main_" + i, _mainRow.transform, new Vector3(RowX(i, labels.Length, 0.13f, 0.006f), 0f, 0f),
-                    new Vector2(0.13f, 0.04f), labels[i], 8f, presses[i]);
+                DockButton b = DockButton.Create("Main_" + i, _mainRow.transform, new Vector3(RowX(i, labels.Length, 0.105f, 0.006f), 0f, 0f),
+                    new Vector2(0.105f, 0.04f), labels[i], 7.5f, presses[i]);
                 if (i == 1) RoutinesButton = b;
                 if (i == 2) ClearButton = b;
+                if (i == 3) _dimButton = b;
             }
 
             // Routines: each adds three timed steps to Next. The "+" says it adds, it does not do.
@@ -209,7 +212,114 @@ namespace PulseDesk
                 }
             }
             _pickerRow.SetActive(false);
+
+            Keyboard = KeyboardView.Build(root);
         }
+
+        // ---------- typing ----------
+
+        /// <summary>
+        /// "New task". On the headset this opens Meta's system keyboard (hands, and its own mic key where
+        /// the headset offers dictation). If that keyboard is not available (Editor, Link) or does not
+        /// appear within two seconds, the keyboard on the dock opens instead. done gets the typed line.
+        /// </summary>
+        public void OpenKeyboard(Action<string> done)
+        {
+            if (Typing) return;
+            if (Compact) SetCompact(false);
+            ClosePicker();
+            _onTyped = done;
+
+            if (TouchScreenKeyboard.isSupported)
+            {
+                try
+                {
+                    _system = TouchScreenKeyboard.Open("", TouchScreenKeyboardType.Default, true, false, false, false,
+                        "Call the bank at 3pm", KeyboardView.MaxLength);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning("PulseDesk: system keyboard failed to open. " + e.Message);
+                    _system = null;
+                }
+                if (_system != null)
+                {
+                    _systemOpened = Time.unscaledTime;
+                    _systemSeen = false;
+                    _shownTyped = null;
+                    Debug.Log("PulseDesk: opened the Meta system keyboard");
+                    return;
+                }
+            }
+            OpenDockKeyboard();
+        }
+
+        private void OpenDockKeyboard()
+        {
+            Action<string> done = _onTyped;
+            SetTyping(true);
+            Keyboard.Show(
+                text => { SetTyping(false); if (done != null) done(text); },
+                () => { SetTyping(false); ShowBanner("Nothing added", false); });
+        }
+
+        /// <summary>Follows the system keyboard: mirrors its text, takes the result, or falls back.</summary>
+        private void PollSystemKeyboard()
+        {
+            TouchScreenKeyboard.Status status = _system.status;
+            if (status == TouchScreenKeyboard.Status.Visible)
+            {
+                _systemSeen = true;
+                string typed = _system.text ?? "";
+                if (typed != _shownTyped)
+                {
+                    _shownTyped = typed;
+                    _banner.color = Theme.TextMain;
+                    _banner.text = typed.Length == 0 ? "Meta keyboard open. Type your task" : "New task: " + typed + "_";
+                }
+                return;
+            }
+
+            // Never became visible: this headset or mode has no system keyboard for us.
+            if (!_systemSeen && status != TouchScreenKeyboard.Status.Done)
+            {
+                if (Time.unscaledTime - _systemOpened < 2f) return;
+                Debug.Log("PulseDesk: system keyboard did not appear (" + status + "), using the dock keyboard");
+                _system = null;
+                OpenDockKeyboard();
+                return;
+            }
+
+            string text = (_system.text ?? "").Trim();
+            Action<string> done = _onTyped;
+            _system = null;
+            _shownTyped = null;
+            _bannerUntil = 0f;
+            if (status == TouchScreenKeyboard.Status.Done && text.Length > 0) { if (done != null) done(text); }
+            else ShowBanner("Nothing added", false);
+        }
+
+        private TouchScreenKeyboard _system;
+        private float _systemOpened;
+        private bool _systemSeen;
+        private Action<string> _onTyped;
+
+        private void SetTyping(bool on)
+        {
+            for (int i = 0; i < Lanes.Length; i++)
+            {
+                Lanes[i].hidden = on;
+                Lanes[i].gameObject.SetActive(!on);
+            }
+            _rows.SetActive(!on);
+            _modeButton.gameObject.SetActive(!on);
+            _shownTyped = null;
+            _shownIdle = "";
+            _bannerUntil = 0f;
+            if (CompactChanged != null) CompactChanged();   // cards follow their lanes
+        }
+
+        private string _shownTyped;
 
         private static float RowX(int index, int count, float width, float gap)
         {
@@ -218,6 +328,15 @@ namespace PulseDesk
         }
 
         // ---------- sprint controls ----------
+
+        private DockButton _dimButton;
+        private int _shownDim = -1;
+
+        private void ToggleDim()
+        {
+            _store.ToggleFocusDim();
+            ShowBanner(_store.FocusDim ? "The room dims while a sprint runs" : "The room stays as it is", false);
+        }
 
         private void OnLeft()
         {
@@ -306,6 +425,27 @@ namespace PulseDesk
         {
             if (_store == null) return;
 
+            if (_system != null)
+            {
+                PollSystemKeyboard();
+                return;
+            }
+
+            // While typing, the banner is the line being typed.
+            if (Typing)
+            {
+                string typed = Keyboard.Text;
+                if (typed != _shownTyped)
+                {
+                    _shownTyped = typed;
+                    _banner.color = Theme.TextMain;
+                    _banner.text = typed.Length == 0
+                        ? "Type a task. Try: call the bank at 3pm"
+                        : "New task: " + typed + "_";
+                }
+                return;
+            }
+
             TaskItem sprint = _store.ActiveSprint();
             int seconds = sprint == null ? -1 : Mathf.CeilToInt(sprint.remainingSeconds);
             bool paused = _store.IsPaused;
@@ -362,6 +502,14 @@ namespace PulseDesk
                     _shownGlance = glance;
                     _glance.text = glance;
                 }
+            }
+
+            int dim = _store.FocusDim ? 1 : 0;
+            if (dim != _shownDim)
+            {
+                _shownDim = dim;
+                _dimButton.SetLabel(dim == 1 ? "Dim: on" : "Dim: off");
+                _dimButton.SetLabelColor(dim == 1 ? Theme.Done : Theme.TextDim);
             }
 
             // The Clear button says what it will do right now.

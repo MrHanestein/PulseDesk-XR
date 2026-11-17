@@ -277,6 +277,21 @@ namespace PulseDesk.Tests
         }
 
         [Test]
+        public void RoomDimsOnlyWhileASprintRuns()
+        {
+            TaskStore s = NewStore();
+            Assert.IsTrue(s.FocusDim, "on by default");
+            Assert.IsTrue(s.FocusActive, "the starter sprint is running");
+            s.ToggleUserPause();
+            Assert.IsFalse(s.FocusActive, "paused: colour back");
+            s.ToggleUserPause();
+            s.ToggleFocusDim();
+            Assert.IsFalse(s.FocusActive, "switched off");
+            s.Save();
+            Assert.IsFalse(NewStore().FocusDim, "the choice is saved");
+        }
+
+        [Test]
         public void ClearAllAndUndo()
         {
             TaskStore s = NewStore();

@@ -355,7 +355,13 @@ namespace PulseDesk.EditorTools
                 if (app != null)
                 {
                     app.AddTask("Email the landlord about the boiler");
-                    app.AddTask("call the bank at 3pm");
+                    // Type the second task on the dock keyboard, the way a user would.
+                    app.NewTask();
+                    DockView dockView = UnityEngine.Object.FindAnyObjectByType<DockView>();
+                    dockView.Keyboard.Type("call the bank at 3pm");
+                    Shot("shot-4-keyboard");
+                    dockView.Keyboard.Submit();
+                    if (dockView.Typing) _smokeErrors++;
                     TaskItem sprint = app.Store.ActiveSprint();
                     if (sprint != null) app.Store.Move(sprint.id, TaskLane.Done);
                     app.SubmitGoal("Plan my day");

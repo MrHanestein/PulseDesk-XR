@@ -9,6 +9,9 @@ namespace PulseDesk
     {
         public Action Pressed;
 
+        /// <summary>Shortest time between two presses. Keyboard keys use less.</summary>
+        public float Debounce = 0.5f;
+
         private Renderer _body;
         private TextMeshPro _label;
         private Transform _contents;
@@ -58,7 +61,7 @@ namespace PulseDesk
         public override void OnPress()
         {
             // One press per half second, however it arrived (pinch and poke can both fire).
-            if (Time.unscaledTime - _lastPress < 0.5f) return;
+            if (Time.unscaledTime - _lastPress < Debounce) return;
             _lastPress = Time.unscaledTime;
             _dip = 1f;
             if (Pressed != null) Pressed();

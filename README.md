@@ -4,7 +4,7 @@ A task board that sits on your real desk. Built for Meta Quest 3 and 3S, used wi
 
 The app puts a small dock in front of you with three lanes called Next, Urgent and Done. Tasks are cards. You pick a card up and drop it in a lane, or pinch it from a distance, or flick your thumb while your hand rests on your leg. A card in Urgent starts a timed sprint. A card in Done plays a chime and adds to your count for the day.
 
-You add a task by typing or dictating one line. The app reads times out of it. "Call the bank at 3pm" becomes a card that is due at 15:00. "Stretch in 20 min" is due twenty minutes from now. "Write report for 25 min" gets a 25 minute sprint, and so does a length at the end of the line with no "for", such as "Gym 1h 30m" or "Read chapter 45 min". The dock sounds a soft tone five minutes before a task is due and a louder one when it is due, so nothing in the day is missed while you work on something else.
+You add a task by typing one line on the Meta keyboard, or on a keyboard built into the dock when the Meta keyboard is not available (the Unity editor, Quest Link). The app reads times out of it. "Call the bank at 3pm" becomes a card that is due at 15:00. "Stretch in 20 min" is due twenty minutes from now. "Write report for 25 min" gets a 25 minute sprint, and so does a length at the end of the line with no "for", such as "Gym 1h 30m" or "Read chapter 45 min". The dock sounds a soft tone five minutes before a task is due and a louder one when it is due, so nothing in the day is missed while you work on something else.
 
 This is my entry for the Meta VR Start Developer Competition 2026, Productivity track, New Experience division. I am building it alone.
 
@@ -18,11 +18,12 @@ This is my entry for the Meta VR Start Developer Competition 2026, Productivity 
 | Finish the sprint | Poke "Done" beside the timer | Pinch it | Thumb swipe right |
 | Give the sprint five more minutes | Poke "+5" | Pinch it | |
 | Pause or resume the sprint | Poke the timer | Pinch the timer | Thumb tap |
-| Add your own task | Poke "New task", then type or dictate | Pinch "New task" | |
+| Add your own task | Poke "New task", then type on the dock keyboard and poke Add | Pinch the keys | |
 | Add a routine of three timed steps | Poke "Routines" and pick one | Pinch "Routines" | |
 | Delete a card | Drop it on the "Clear" button | Drag it there from a distance | |
 | Clear the Done lane, or the whole board | Poke "Clear done" or "Clear all" | Pinch it | |
 | Take back a delete or a clear | Poke the same button while it says "Undo" | Pinch it | |
+| Dim the room during sprints, or stop it | Poke "Dim: on" or "Dim: off" | Pinch it | |
 | Shrink the dock to just the sprint | Poke "Compact" | Pinch it | |
 | Put the dock somewhere else | Poke "Move dock" | Pinch it | |
 

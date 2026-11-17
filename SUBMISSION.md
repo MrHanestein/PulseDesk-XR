@@ -19,7 +19,7 @@ PulseDesk XR
 
 **Tagline** (140 characters at most)
 
-A task board on your real desk that runs itself. Say a task once, it comes back on time. Pinch, poke or flick a thumb. No controllers.
+A task board on your real desk that runs itself. Add a task once, it comes back on time. Pinch, poke or flick a thumb. No controllers.
 
 **Track** Productivity
 
@@ -33,17 +33,17 @@ A task board on your real desk that runs itself. Say a task once, it comes back 
 
 Inspiration
 
-A to-do list is easy to write and hard to face. I wanted the three things that matter, what I am doing now, what is next and what is finished, to sit on my desk as objects I can pick up. I also wanted to stop managing the list. I say a task once, and the desk brings it back at the right time.
+A to-do list is easy to write and hard to face. I wanted the three things that matter, what I am doing now, what is next and what is finished, to sit on my desk as objects I can pick up. I also wanted to stop managing the list. I add a task once, and the desk brings it back at the right time.
 
 What it does
 
 PulseDesk XR places a small dock on your real desk with three lanes called Next, Urgent and Done. Tasks are cards. You can grab a card and drop it in a lane, pinch it from a distance, or keep your hand on your leg and flick your thumb.
 
-You add a task by typing or dictating one line with the headset keyboard. The app reads times out of the line. "Call the bank at 3pm" becomes a card that is due at 15:00. "Gym 1h 30m" gets a ninety minute sprint. Five minutes before a task is due the dock plays a soft tone. When it is due the dock plays an alert, and if nothing else is running the task starts by itself.
+You add a task by typing one line on the Meta keyboard. If it is not available, a keyboard on the dock opens instead, poked like any other button, with shortcut keys that write "in 15 min" and "for 25 min" in one tap. The app reads times out of the line. "Call the bank at 3pm" becomes a card that is due at 15:00. "Gym 1h 30m" gets a ninety minute sprint. Five minutes before a task is due the dock plays a soft tone. When it is due the dock plays an alert, and if nothing else is running the task starts by itself.
 
 The card in Urgent is a timed sprint. A bar drains as the time runs out, a tone marks the halfway point and the timer pulses in the last minute. One tap on Done finishes it and three seconds later the next card starts by itself, with due tasks first. One tap on +5 gives it five more minutes.
 
-Routines add three timed steps for common jobs and start the first one. Deleting a card or clearing the board can be undone with one tap. A compact mode hides everything except the running sprint, so the dock can sit beside a laptop, and it opens again when time runs out. The header shows open tasks, tasks done today and minutes of focus today. The board is saved, so tomorrow the open tasks are still there, yesterday's finished pile is gone, and the first line you see is what the last day came to.
+Routines add three timed steps for common jobs and start the first one. Deleting a card or clearing the board can be undone with one tap. While a sprint runs the real room fades to grey and dims a little, so the task stands out, and the colour returns when you finish or pause. A compact mode hides everything except the running sprint, so the dock can sit beside a laptop, and it opens again when time runs out. The header shows open tasks, tasks done today and minutes of focus today. The board is saved, so tomorrow the open tasks are still there, yesterday's finished pile is gone, and the first line you see is what the last day came to.
 
 How I built it
 
@@ -59,19 +59,20 @@ What's next
 
 **Hand interactions**
 
-Every action has a hands-only route and most have three. You can grab or poke within arm's reach, point and pinch from a distance, or use thumb microgestures with your hand at rest. The buttons you use most, Done, +5 and Start, sit beside the timer and take one tap. Text entry uses the system keyboard with hands. A controller is never needed.
+Every action has a hands-only route and most have three. You can grab or poke within arm's reach, point and pinch from a distance, or use thumb microgestures with your hand at rest. The buttons you use most, Done, +5 and Start, sit beside the timer and take one tap. Text entry uses the Meta keyboard, with a keyboard on the dock as a fallback that you poke or pinch. A controller is never needed.
 
 ## 3. Features, as a list for the form or the video description
 
 - A dock that lands on your real desk, in a scanned room, an unscanned room or with no desk at all
 - Three ways to move a card with bare hands (grab, point and pinch, thumb swipe)
-- One line of text or dictation becomes a card with a due time and a sprint length
+- One typed line becomes a card with a due time and a sprint length, on a keyboard built into the dock
 - Alerts five minutes before and at the due time, and the due task starts by itself if you are free
 - A sprint timer with a draining bar, a halfway tone, a last minute pulse and a repeating time-up alert
 - One tap for Done, +5 minutes, Start, pause
 - The next card starts by itself when a sprint is finished
 - Routines of three timed steps that start straight away
 - One button for clear done, clear all and undo
+- The room fades to grey while a sprint runs and the colour comes back when it ends, using passthrough colour controls
 - Compact mode that leaves only the sprint in view
 - Open tasks, done today and focus minutes in the header, a streak, and a recap on the first launch of a new day
 - Works offline, with every permission denied, and saves the board between sessions
@@ -84,15 +85,17 @@ Aim for 2 minutes 20 seconds. Never go past 2 minutes 55. Record in the headset 
 | --- | --- | --- |
 | 0:00 to 0:08 | Your real desk through the headset. The dock grows in on the desk. | "This is my desk. PulseDesk turns it into the one place my day lives." |
 | 0:08 to 0:25 | Bare hands in view. Pinch the first card, carry it to Done, chime. | "No controllers. I pick a task up and put it where it belongs." |
-| 0:25 to 0:45 | Poke New task. Dictate "call the bank at 3 pm". The card lands with 15:00 on it. Then "gym 1 hour 30". | "I say it once. It reads the time out of what I said." |
-| 0:45 to 1:05 | Poke Routines, then Deep work. The first step starts and the bar begins to drain. | "A routine is three timed steps. The first one is already running." |
+| 0:25 to 0:45 | Poke New task. Type "call bank at 3pm" on the Meta keyboard and press Done. The card lands with 15:00 on it. | "I type it once. It reads the time out of what I wrote." |
+| 0:45 to 1:05 | Poke Routines, then Deep work. The first step starts, the bar begins to drain and the room fades to grey around the desk. | "When I start, the room steps back and only the task is in colour." |
 | 1:05 to 1:25 | Poke Done. Three seconds later the next card slides into Urgent and starts. Poke +5. | "When I finish, the next task starts by itself. I never manage the list." |
 | 1:25 to 1:45 | Hand resting on the leg. Thumb swipe right finishes a card, thumb tap pauses. | "With my hand at rest, a flick of the thumb is enough." |
 | 1:45 to 2:00 | Poke Compact. Type on a real keyboard with the small timer beside the laptop. Show the last minute pulse and a due alert. | "While I work it shrinks to a timer, and it tells me when something is due." |
 | 2:00 to 2:12 | A different room with no scan, or a sofa. The dock still lands in reach. | "It works in rooms it has never seen." |
 | 2:12 to 2:20 | The header with done and focus minutes. End card with the name and tagline. | "PulseDesk XR. Your day, on your desk." |
 
-To record the due alert without waiting, add a task with "in 6 minutes" before you start recording, so the five minute tone lands during the take. To record the last minute pulse, start a 1 minute sprint.
+To record the due alert without waiting, add a task with "in 6 min" before you start recording, so the five minute tone lands during the take. To record the last minute pulse, start a 1 minute sprint.
+
+Keep typed lines short on camera. "call bank at 3pm" is 16 pokes. Practise it until it takes under ten seconds, or cut the typing in the edit and show only the first and last few keys.
 
 Before uploading, check that there are no other people's faces or voices, no brand logos visible on the desk in passthrough, no copyrighted music, captions are in English, and the link opens in a private browser window.
 

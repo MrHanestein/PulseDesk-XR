@@ -21,7 +21,6 @@ namespace PulseDesk
         private DockView _dock;
         private CardManager _cards;
         private Transform _head;
-        private TextEntry _text;
 
         private void Awake()
         {
@@ -30,7 +29,6 @@ namespace PulseDesk
             if (Store == null) Store = gameObject.AddComponent<TaskStore>();
             _sfx = gameObject.AddComponent<AudioFeedback>();
             _placer = gameObject.AddComponent<DockPlacer>();
-            _text = gameObject.AddComponent<TextEntry>();
 
             _interactor = gameObject.AddComponent<HandInteractor>();
             _interactor.AddSource(gameObject.AddComponent<MousePointerSource>());
@@ -38,6 +36,7 @@ namespace PulseDesk
 #if PULSEDESK_META
             _interactor.AddSource(gameObject.AddComponent<OvrHandPointerSource>());
             gameObject.AddComponent<OvrSystemHooks>().Init(Store, _placer);
+            gameObject.AddComponent<FocusRoom>().Init(Store);
 #endif
 #if PULSEDESK_META && PULSEDESK_MICROGESTURES
             gameObject.AddComponent<OvrMicrogestures>().Init(Store, _sfx);
@@ -234,24 +233,11 @@ namespace PulseDesk
             StartCoroutine(AddSteps(goal, steps));
         }
 
-        /// <summary>"New task": type one task with the system keyboard (hands only, works offline).</summary>
+        /// <summary>"New task": opens the keyboard on the dock. Hands only, works offline.</summary>
         public void NewTask()
         {
-            if (_dock == null || _text.Active) return;
-            bool started = _text.Begin("Call the bank at 3pm",
-                typed => _dock.ShowBanner("New task: " + typed + "_", false),
-                AddTask,
-                () => _dock.ShowBanner("Nothing added", false));
-            if (started)
-            {
-                _dock.ShowBanner("Try \"Call the bank at 3pm\" or \"Report 1h 30m\"", false);
-            }
-            else
-            {
-                // No keyboard on this device: never a dead end.
-                _dock.OpenPicker();
-                _dock.ShowBanner("No keyboard here. Pick a routine instead", false);
-            }
+            if (_dock == null || _dock.Typing) return;
+            _dock.OpenKeyboard(AddTask);
         }
 
         /// <summary>
@@ -368,7 +354,7 @@ namespace PulseDesk
         private void Update()
         {
             if (!Application.isEditor) return;
-            if (_text != null && _text.Active) return;   // typing a task: letters are not shortcuts
+            if (_dock != null && _dock.Typing) return;   // typing a task: letters are not shortcuts
             if (DeskInput.KeyDown(DeskKey.Left)) Store.MoveFocused(TaskLane.Urgent);
             if (DeskInput.KeyDown(DeskKey.Right)) Store.MoveFocused(TaskLane.Done);
             if (DeskInput.KeyDown(DeskKey.Up)) Store.CycleFocus(-1);

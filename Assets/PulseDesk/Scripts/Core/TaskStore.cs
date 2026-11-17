@@ -75,6 +75,25 @@ namespace PulseDesk
         public int FocusMinutesToday { get { return Mathf.FloorToInt(_save.focusSecondsToday / 60f); } }
         public bool CanUndo { get { return !string.IsNullOrEmpty(_undoJson); } }
 
+        /// <summary>Whether the real room dims while a sprint runs. Saved.</summary>
+        public bool FocusDim { get { return _save.focusDim; } }
+
+        /// <summary>True while the room should be dimmed: a sprint is running, not paused, time left.</summary>
+        public bool FocusActive
+        {
+            get
+            {
+                TaskItem t = ActiveSprint();
+                return _save.focusDim && t != null && !IsPaused && t.remainingSeconds > 0f;
+            }
+        }
+
+        public void ToggleFocusDim()
+        {
+            _save.focusDim = !_save.focusDim;
+            Save();
+        }
+
         private void Update()
         {
             Tick(Time.deltaTime);

@@ -8,6 +8,8 @@ namespace PulseDesk
     public class DockActions
     {
         public Action newTask;
+        public Action speak;
+        public Func<bool> listening;
         public Action<string> routine;
         public Action clearOrUndo;
         public Func<string> clearLabel;   // "Undo", "Clear done", "Clear all" or "Clear"
@@ -180,15 +182,16 @@ namespace PulseDesk
             Transform row = _rows.transform;
 
             _mainRow = Make.Empty("Main", row, Vector3.zero, Quaternion.identity);
-            string[] labels = { "New task", "Routines", "Clear", "Dim: on", "Move dock" };
-            Action[] presses = { _actions.newTask, OpenPicker, _actions.clearOrUndo, ToggleDim, _actions.recenter };
+            string[] labels = { "Speak", "Type", "Routines", "Clear", "Dim: on", "Move dock" };
+            Action[] presses = { _actions.speak, _actions.newTask, OpenPicker, _actions.clearOrUndo, ToggleDim, _actions.recenter };
             for (int i = 0; i < labels.Length; i++)
             {
-                DockButton b = DockButton.Create("Main_" + i, _mainRow.transform, new Vector3(RowX(i, labels.Length, 0.105f, 0.006f), 0f, 0f),
-                    new Vector2(0.105f, 0.04f), labels[i], 7.5f, presses[i]);
-                if (i == 1) RoutinesButton = b;
-                if (i == 2) ClearButton = b;
-                if (i == 3) _dimButton = b;
+                DockButton b = DockButton.Create("Main_" + i, _mainRow.transform, new Vector3(RowX(i, labels.Length, 0.09f, 0.005f), 0f, 0f),
+                    new Vector2(0.09f, 0.04f), labels[i], 7.5f, presses[i]);
+                if (i == 0) { _speakButton = b; b.SetLabelColor(Theme.Next); }
+                if (i == 2) RoutinesButton = b;
+                if (i == 3) ClearButton = b;
+                if (i == 4) _dimButton = b;
             }
 
             // Routines: each adds three timed steps to Next. The "+" says it adds, it does not do.
@@ -331,6 +334,8 @@ namespace PulseDesk
 
         private DockButton _dimButton;
         private int _shownDim = -1;
+        private DockButton _speakButton;
+        private int _shownListening = -1;
 
         private void ToggleDim()
         {
@@ -502,6 +507,14 @@ namespace PulseDesk
                     _shownGlance = glance;
                     _glance.text = glance;
                 }
+            }
+
+            int listening = _actions.listening != null && _actions.listening() ? 1 : 0;
+            if (listening != _shownListening)
+            {
+                _shownListening = listening;
+                _speakButton.SetLabel(listening == 1 ? "Listening" : "Speak");
+                _speakButton.SetLabelColor(listening == 1 ? Theme.Urgent : Theme.Next);
             }
 
             int dim = _store.FocusDim ? 1 : 0;

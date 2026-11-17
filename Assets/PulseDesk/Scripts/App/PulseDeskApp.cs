@@ -18,6 +18,7 @@ namespace PulseDesk
         private AudioFeedback _sfx;
         private HandInteractor _interactor;
         private DockPlacer _placer;
+        private SpeechInput _speech;
         private DockView _dock;
         private CardManager _cards;
         private Transform _head;
@@ -29,6 +30,7 @@ namespace PulseDesk
             if (Store == null) Store = gameObject.AddComponent<TaskStore>();
             _sfx = gameObject.AddComponent<AudioFeedback>();
             _placer = gameObject.AddComponent<DockPlacer>();
+            _speech = gameObject.AddComponent<SpeechInput>();
 
             _interactor = gameObject.AddComponent<HandInteractor>();
             _interactor.AddSource(gameObject.AddComponent<MousePointerSource>());
@@ -37,6 +39,7 @@ namespace PulseDesk
             _interactor.AddSource(gameObject.AddComponent<OvrHandPointerSource>());
             gameObject.AddComponent<OvrSystemHooks>().Init(Store, _placer);
             gameObject.AddComponent<FocusRoom>().Init(Store);
+            _interactor.AddSource(gameObject.AddComponent<OvrControllers>());
 #endif
 #if PULSEDESK_META && PULSEDESK_MICROGESTURES
             gameObject.AddComponent<OvrMicrogestures>().Init(Store, _sfx);
@@ -99,6 +102,8 @@ namespace PulseDesk
             {
                 DockActions actions = new DockActions();
                 actions.newTask = NewTask;
+                actions.speak = Speak;
+                actions.listening = () => IsListening;
                 actions.routine = SubmitGoal;
                 actions.clearOrUndo = ClearOrUndo;
                 actions.clearLabel = ClearLabel;
@@ -232,6 +237,34 @@ namespace PulseDesk
             }
             StartCoroutine(AddSteps(goal, steps));
         }
+
+        /// <summary>
+        /// "Speak": listens for one task and adds it, reading times out of what was said.
+        /// Pressing it again while listening stops and uses what was heard so far.
+        /// </summary>
+        public void Speak()
+        {
+            if (_dock == null || _dock.Typing) return;
+            if (_speech.Listening)
+            {
+                _speech.Stop();
+                return;
+            }
+            if (!_speech.Available)
+            {
+                _dock.ShowBanner("Speaking is not available here. Type instead", false);
+                NewTask();
+                return;
+            }
+            _sfx.Nudge();
+            _dock.ShowBanner("Listening. Say a task, like \"call the bank at 3pm\"", false);
+            _speech.Listen(
+                heard => _dock.ShowBanner("Heard: " + heard, false),
+                said => AddTask(said),
+                message => _dock.ShowBanner(message, false));
+        }
+
+        public bool IsListening { get { return _speech != null && _speech.Listening; } }
 
         /// <summary>"New task": opens the keyboard on the dock. Hands only, works offline.</summary>
         public void NewTask()

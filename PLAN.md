@@ -50,7 +50,8 @@ Put the controllers in another room first.
 - [ ] Poke "Compact". Only the banner and the sprint remain. Poke "Expand" to bring the board back
 - [ ] In compact mode let a 1 minute sprint run out. The timer pulses in the last minute and the full board returns at zero
 - [ ] Poke "New task". The Meta keyboard opens. Type a task and press Done. A card arrives in Next
-- [ ] If the Meta keyboard has a microphone key, try speaking a task with it. Note whether it works
+- [ ] Pinch "Speak" and say "call the bank at 3pm". The button reads Listening, the words appear in the banner, and a card lands with 15:00
+- [ ] Pick up a controller. Point and pull the trigger on a card and move it. Press A to finish the sprint, B to speak, X to type, Y to pause
 - [ ] Start a sprint. The room fades to grey within two seconds. Pause it and the colour returns. Poke "Dim: on" to turn it off
 - [ ] Type "call bank" and poke the "in 15 min" key, then Add. The card shows a due time
 - [ ] One minute later a soft tone plays and the banner says "In 5 minutes". At the due time a louder alert plays

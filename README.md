@@ -18,6 +18,7 @@ This is my entry for the Meta VR Start Developer Competition 2026, Productivity 
 | Finish the sprint | Poke "Done" beside the timer | Pinch it | Thumb swipe right |
 | Give the sprint five more minutes | Poke "+5" | Pinch it | |
 | Pause or resume the sprint | Poke the timer | Pinch the timer | Thumb tap |
+| Speak a task | Poke "Speak" and say it, for example "call the bank at 3pm" | Pinch it | |
 | Add your own task | Poke "New task", then type on the dock keyboard and poke Add | Pinch the keys | |
 | Add a routine of three timed steps | Poke "Routines" and pick one | Pinch "Routines" | |
 | Delete a card | Drop it on the "Clear" button | Drag it there from a distance | |
@@ -26,6 +27,8 @@ This is my entry for the Meta VR Start Developer Competition 2026, Productivity 
 | Dim the room during sprints, or stop it | Poke "Dim: on" or "Dim: off" | Pinch it | |
 | Shrink the dock to just the sprint | Poke "Compact" | Pinch it | |
 | Put the dock somewhere else | Poke "Move dock" | Pinch it | |
+
+Touch controllers also work: point and pull the trigger to pinch. A finishes the sprint or starts the next card, B speaks a task, X types one, Y pauses. Each press gives a short buzz.
 
 The board moves itself forward so there is little to manage.
 

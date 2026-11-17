@@ -1,10 +1,10 @@
 # PulseDesk XR
 
-A task board that sits on your real desk and keeps your day moving. Built for Meta Quest 3 and 3S, used with bare hands or Touch controllers.
+PulseDesk XR is a task board that sits on your real desk and keeps your day moving. Built for Meta Quest 3 and 3S, used with bare hands or Touch controllers.
 
 PulseDesk XR places a small dock on your desk with three lanes: **Next**, **Urgent** and **Done**. Each task is a card. The card in Urgent is a timed sprint. When you finish it, the next card starts by itself. You type a task once, the app reads any time out of what you wrote, and the dock reminds you when it is due.
 
-Entry for the Meta VR Start Developer Competition 2026, Productivity track, New Experience division. Built by one developer.
+Entry for the Meta VR Start Developer Competition 2026, Productivity track, New Experience division. Built by David Anthony.
 
 ## What it does
 

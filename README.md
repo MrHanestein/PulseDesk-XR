@@ -6,6 +6,8 @@ PulseDesk XR places a small dock on your desk with three lanes: **Next**, **Urge
 
 Entry for the Meta VR Start Developer Competition 2026, Productivity track, New Experience division. Built by David Anthony.
 
+Demo video:https://youtu.be/aloayrz1JLY
+
 ## What it does
 
 **Finds your desk.** The dock lands on your table without any setup. It uses your room scan if you have one, live depth data if you do not, and a seated position in front of you if neither finds a surface.

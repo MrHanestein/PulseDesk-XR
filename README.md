@@ -8,6 +8,12 @@ Entry for the Meta VR Start Developer Competition 2026, Productivity track, New 
 
 Demo video:https://youtu.be/aloayrz1JLY
 
+## Screenshots
+
+<img width="1444" height="981" alt="{302F50F9-DEE0-438D-8CE3-219E2B15C07B}" src="https://github.com/user-attachments/assets/a1893393-6775-4220-91da-1567f3724492" />
+<img width="1375" height="758" alt="{0EE424EF-1B9C-45E0-85DA-DAE661D16A08}" src="https://github.com/user-attachments/assets/bdd345a6-744b-432a-b47d-06f5de394c7f" />
+
+
 ## What it does
 
 **Finds your desk.** The dock lands on your table without any setup. It uses your room scan if you have one, live depth data if you do not, and a seated position in front of you if neither finds a surface.
